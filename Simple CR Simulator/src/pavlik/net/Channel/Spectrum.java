@@ -2,18 +2,12 @@ package pavlik.net.Channel;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class Spectrum {
 
-	static private Set<Channel>	channelSet	= new HashSet<>();
-
-	/**
-	 * Set the constructor private in order to force use of the buildChannels factory that allows
-	 * string parsing
-	 */
-	public Spectrum() {
-
-	}
+	static Set<Channel>			channelSet	= new HashSet<>();
+	private static final Logger	log			= Logger.getLogger(Spectrum.class.getName());
 
 	/**
 	 * Build a set of channels and add them to the global list and return a set for local use
@@ -22,7 +16,7 @@ public class Spectrum {
 	 *            A string that must contain integers that are comma separated and dash separated,
 	 *            e.g. "1-3,5".
 	 */
-	public static Channel[] buildChannels(String channelString) {
+	public Channel[] buildChannels(String channelString) {
 		Set<Channel> channelSet = new HashSet<>();
 		String[] channelCommaSplits = channelString.split(",");
 		for (String commaChannel : channelCommaSplits) {
@@ -58,9 +52,39 @@ public class Spectrum {
 		return channelSet.toArray(new Channel[0]);
 	}
 
-	private static Channel buildChannel(int channelNum) {
+	private Channel buildChannel(int channelNum) {
 		Channel channel = new Channel(channelNum);
 		channelSet.add(channel);
 		return channel;
+	}
+
+	/**
+	 * Get a set of all channels in the spectrum
+	 * 
+	 * @return a Set of Channel
+	 */
+	public Set<Channel> getChannels() {
+		return channelSet;
+	}
+
+	public class Channel {
+		int	id;
+
+		/**
+		 * Set the constructor protected in order to force use of the Spectrum.buildChannels factory
+		 * that allows string parsing
+		 */
+		Channel(int channel) {
+			this.id = channel;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Channel) {
+				return id == ((Channel) obj).id;
+			}
+			return super.equals(obj);
+		}
+
 	}
 }

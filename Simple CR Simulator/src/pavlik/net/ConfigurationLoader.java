@@ -1,8 +1,10 @@
 package pavlik.net;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,7 +16,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import pavlik.net.Channel.Spectrum;
+import pavlik.net.Channel.Spectrum.Channel;
+import pavlik.net.radio.Radio;
+import pavlik.net.radio.RendezvousAlgorithm;
 
 /**
  * XML DOM Parser class that converts XML configuration files into Java objects.
@@ -27,18 +31,21 @@ import pavlik.net.Channel.Spectrum;
  *
  */
 public class ConfigurationLoader {
-
-	public static String	defaultConfiguration	= "DefaultConfiguration.xml";
+	private static final Logger	log				= Logger.getLogger(ConfigurationLoader.class
+														.getName());
+	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
 	public static Simulation loadConfiguration() {
+		log.info("Loading configuration");
 		File defaultConfig = new File("DefaultConfiguration.xml");
 		Simulation simulation = new Simulation();
-		Set<Radio> radios = loadRadiosConfiguration(defaultConfig);
+		Set<Radio> radios = loadRadiosConfiguration(defaultConfig, simulation);
 		simulation.addRadios(radios);
 		return simulation;
 	}
 
-	private static Set<Radio> loadRadiosConfiguration(File xmlFile) {
+	private static Set<Radio> loadRadiosConfiguration(File xmlFile, Simulation simulation) {
+		log.info("Loading radios");
 		Set<Radio> radioSet = new HashSet<>();
 		try {
 			// DOM setup
@@ -47,14 +54,6 @@ public class ConfigurationLoader {
 
 			Document root = dBuilder.parse(xmlFile);
 
-			// Normalizing DOM to convert:
-			// Element foo
-			// Text node: ""
-			// Text node: "Hello "
-			// Text node: "wor"
-			// Text node: "ld"
-			// to Element foo
-			// Text node: "Hello world"
 			root.getDocumentElement().normalize();
 
 			NodeList nodeList = root.getElementsByTagName("radio");
@@ -65,22 +64,23 @@ public class ConfigurationLoader {
 					Element eElement = (Element) node;
 					String name = eElement.getAttribute("name");
 					String channelString = eElement.getAttribute("channels");
-					Radio radio = new Radio(name, Spectrum.buildChannels(channelString));
+					String rendezvousString = eElement.getAttribute("algorithm");
+					Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
+					RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(
+							rendezvousString, channels);
+					Radio radio = new Radio(name, algorithm);
 					radioSet.add(radio);
 				} else {
 					throw new RuntimeException("Identified non-element node: " + node.getNodeName()
 							+ " type: " + node.getNodeType());
 				}
 			}
-
 			return radioSet;
-		} catch (ParserConfigurationException e) {
+
+		} catch (ParserConfigurationException | SAXException | IOException e) {
 			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			log.severe("Exception! " + e.toString());
+			return null;
 		}
-		return null;
 	}
 }

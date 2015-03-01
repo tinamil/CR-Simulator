@@ -36,7 +36,7 @@ public class ConfigurationLoader {
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
 	public static Simulation loadConfiguration() {
-		log.info("Loading configuration");
+		log.fine("Loading configuration");
 		File defaultConfig = new File("DefaultConfiguration.xml");
 		Simulation simulation = new Simulation();
 		Set<Radio> radios = loadRadiosConfiguration(defaultConfig, simulation);
@@ -45,7 +45,7 @@ public class ConfigurationLoader {
 	}
 
 	private static Set<Radio> loadRadiosConfiguration(File xmlFile, Simulation simulation) {
-		log.info("Loading radios");
+		log.fine("Loading radios");
 		Set<Radio> radioSet = new HashSet<>();
 		try {
 			// DOM setup

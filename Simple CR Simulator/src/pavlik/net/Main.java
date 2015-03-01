@@ -9,7 +9,7 @@ public class Main {
 	private static final Logger	log	= Logger.getLogger(Main.class.getName());
 
 	public static void main(String[] args) {
-		log.info("Begin Main");
+		log.fine("Begin Main");
 		Simulation sim = ConfigurationLoader.loadConfiguration();
 		sim.start();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -22,7 +22,7 @@ public class Main {
 			sim.stopSimulation();
 		} catch (IOException e) {
 			e.printStackTrace();
-			log.info("Exception: " + e.toString());
+			log.severe("Exception: " + e.toString());
 		}
 	}
 

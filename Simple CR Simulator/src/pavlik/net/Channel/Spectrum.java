@@ -17,6 +17,7 @@ public class Spectrum {
 	 *            e.g. "1-3,5".
 	 */
 	public Channel[] buildChannels(String channelString) {
+		log.fine("Building channels");
 		Set<Channel> channelSet = new HashSet<>();
 		String[] channelCommaSplits = channelString.split(",");
 		for (String commaChannel : channelCommaSplits) {

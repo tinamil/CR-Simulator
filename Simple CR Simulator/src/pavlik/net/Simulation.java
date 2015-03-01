@@ -22,9 +22,15 @@ public class Simulation extends Thread {
 	@Override
 	public void run() {
 		log.info("Begin simulation");
+		for (Radio radio : allRadios) {
+			radio.start();
+		}
 		while (running) {
-			for (Radio radio : allRadios) {
-				radio.start();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				log.severe("Exception: " + e.toString());
 			}
 		}
 		log.info("End simulation");

@@ -16,7 +16,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import pavlik.net.Channel.Spectrum.Channel;
+import pavlik.net.Channel.Channel;
 import pavlik.net.radio.Radio;
 import pavlik.net.radio.RendezvousAlgorithm;
 

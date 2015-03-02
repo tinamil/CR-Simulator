@@ -67,25 +67,4 @@ public class Spectrum {
 	public Set<Channel> getChannels() {
 		return channelSet;
 	}
-
-	public class Channel {
-		int	id;
-
-		/**
-		 * Set the constructor protected in order to force use of the Spectrum.buildChannels factory
-		 * that allows string parsing
-		 */
-		Channel(int channel) {
-			this.id = channel;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof Channel) {
-				return id == ((Channel) obj).id;
-			}
-			return super.equals(obj);
-		}
-
-	}
 }

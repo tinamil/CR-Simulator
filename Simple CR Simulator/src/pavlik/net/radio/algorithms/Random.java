@@ -1,6 +1,6 @@
 package pavlik.net.radio.algorithms;
 
-import pavlik.net.Channel.Spectrum.Channel;
+import pavlik.net.Channel.Channel;
 import pavlik.net.radio.RendezvousAlgorithm;
 
 public class Random extends RendezvousAlgorithm {

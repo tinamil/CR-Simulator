@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Logger;
 
-public class Main {
-	private static final Logger	log	= Logger.getLogger(Main.class.getName());
+public class TextInterface {
+	private static final Logger	log	= Logger.getLogger(TextInterface.class.getName());
 
 	public static void main(String[] args) {
 		log.fine("Begin Main");

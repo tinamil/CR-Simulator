@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import pavlik.net.Channel.Channel;
 import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
@@ -12,7 +13,7 @@ public class Simulation extends Thread {
 	long						currentTime	= 0;
 	final Spectrum				spectrum	= new Spectrum();
 	Set<Radio>					allRadios	= new HashSet<Radio>();
-	Set<Spectrum.Channel>		allChannels	= spectrum.getChannels();
+	Set<Channel>				allChannels	= spectrum.getChannels();
 	private volatile boolean	running		= true;
 
 	public void addRadios(Set<Radio> radios) {
@@ -42,5 +43,8 @@ public class Simulation extends Thread {
 
 	public void stopSimulation() {
 		running = false;
+		for (Radio radio : allRadios) {
+			radio.stopSimulation();
+		}
 	}
 }

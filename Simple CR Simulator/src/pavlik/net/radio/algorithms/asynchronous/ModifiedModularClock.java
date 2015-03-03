@@ -8,7 +8,7 @@ public class ModifiedModularClock extends RendezvousAlgorithm {
 	Channel[]			channels;
 	java.util.Random	rand	= new java.util.Random();
 
-	protected ModifiedModularClock(Channel[] channels) {
+	public ModifiedModularClock(Channel[] channels) {
 		super(channels);
 		// TODO Auto-generated constructor stub
 	}

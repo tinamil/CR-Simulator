@@ -8,12 +8,12 @@ import pavlik.net.radio.RendezvousAlgorithm;
  * @author jpavlik
  *
  */
-public class GeneratedOrthogonalSequenceAlgorithm extends RendezvousAlgorithm {
+public class GeneratedOrthogonalSequence extends RendezvousAlgorithm {
 
 	Channel[] channels;
 	int index = 0;
 
-	public GeneratedOrthogonalSequenceAlgorithm(Channel[] channels) {
+	public GeneratedOrthogonalSequence(Channel[] channels) {
 		super(channels);
 		this.channels = buildSequence(permutation(channels));
 	}

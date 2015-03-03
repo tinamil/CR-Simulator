@@ -38,49 +38,75 @@ public class ConfigurationLoader {
 	public static Simulation loadConfiguration() {
 		log.fine("Loading configuration");
 		File defaultConfig = new File("DefaultConfiguration.xml");
-		Simulation simulation = new Simulation();
-		Set<Radio> radios = loadRadiosConfiguration(defaultConfig, simulation);
-		simulation.addRadios(radios);
+		Document document = readXML(defaultConfig);
+		if (document == null) return null;
+		Simulation simulation = loadNetworkConfiguration(document);
+		loadRadiosConfiguration(document, simulation);
 		return simulation;
 	}
 
-	private static Set<Radio> loadRadiosConfiguration(File xmlFile, Simulation simulation) {
-		log.fine("Loading radios");
-		Set<Radio> radioSet = new HashSet<>();
-		try {
-			// DOM setup
+	private static Document readXML(File xmlFile) {
+		try { // DOM setup
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 
-			Document root = dBuilder.parse(xmlFile);
+			Document document = dBuilder.parse(xmlFile);
 
-			root.getDocumentElement().normalize();
-
-			NodeList nodeList = root.getElementsByTagName("radio");
-
-			for (int nodeIndex = 0; nodeIndex < nodeList.getLength(); nodeIndex++) {
-				Node node = nodeList.item(nodeIndex);
-				if (node.getNodeType() == Node.ELEMENT_NODE) {
-					Element eElement = (Element) node;
-					String name = eElement.getAttribute("name");
-					String channelString = eElement.getAttribute("channels");
-					String rendezvousString = eElement.getAttribute("algorithm");
-					Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
-					RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(
-							rendezvousString, channels);
-					Radio radio = new Radio(name, algorithm);
-					radioSet.add(radio);
-				} else {
-					throw new RuntimeException("Identified non-element node: " + node.getNodeName()
-							+ " type: " + node.getNodeType());
-				}
-			}
-			return radioSet;
-
+			document.getDocumentElement().normalize();
+			return document;
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			e.printStackTrace();
 			log.severe("Exception! " + e.toString());
 			return null;
 		}
+	}
+
+	private static Simulation loadNetworkConfiguration(Document doc) {
+		Simulation sim = new Simulation();
+		NodeList networkList = doc.getElementsByTagName("network");
+		Node root = networkList.item(0);
+		if (root.getNodeType() == Node.ELEMENT_NODE) {
+			Element rootElement = (Element) root;
+			String timingString = rootElement.getAttribute("timing");
+			switch (timingString) {
+				case "asynchronous":
+				case "async":
+					sim.setTiming(Simulation.ASYNC);
+					break;
+				case "slotted":
+				case "sync":
+				case "synchronous":
+					sim.setTiming(Simulation.SYNC);
+			}
+			String rendezvousString = rootElement.getAttribute("algorithm");
+			sim.setRendezvousString(rendezvousString);
+		} else {
+			throw new RuntimeException("Root was not an element");
+		}
+		return sim;
+	}
+
+	private static void loadRadiosConfiguration(Document doc, Simulation simulation) {
+		log.fine("Loading radios");
+		Set<Radio> radioSet = new HashSet<>();
+		NodeList nodeList = doc.getElementsByTagName("radio");
+
+		for (int nodeIndex = 0; nodeIndex < nodeList.getLength(); nodeIndex++) {
+			Node node = nodeList.item(nodeIndex);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Element eElement = (Element) node;
+				String name = eElement.getAttribute("name");
+				String channelString = eElement.getAttribute("channels");
+				Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
+				RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(simulation
+						.getRendezvousString(), channels);
+				Radio radio = new Radio(name, algorithm);
+				radioSet.add(radio);
+			} else {
+				throw new RuntimeException("Identified non-element node: " + node.getNodeName()
+						+ " type: " + node.getNodeType());
+			}
+		}
+		simulation.addRadios(radioSet);
 	}
 }

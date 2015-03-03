@@ -8,13 +8,17 @@ import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
 public class Simulation extends Thread {
-	private static final Logger log = Logger.getLogger(Simulation.class
-			.getName());
-	long currentTime = 0;
-	final Spectrum spectrum = new Spectrum();
-	Set<Radio> allRadios = new HashSet<>();
-	private volatile boolean running = true;
-	Set<SimListener> simList = new HashSet<>();
+	private static final Logger	log				= Logger.getLogger(Simulation.class.getName());
+	public static final int		SYNC			= 0;
+	public static final int		ASYNC			= 1;
+
+	public int					timing;
+	private Set<Radio>			allRadios		= new HashSet<>();
+	private volatile boolean	running			= true;
+	private Set<SimListener>	simList			= new HashSet<>();
+	private String				rendezvousString	= "";
+	public long					timeSpent		= 0;
+	private Spectrum			spectrum		= new Spectrum();
 
 	public void addRadios(Set<Radio> radios) {
 		allRadios.addAll(radios);
@@ -24,16 +28,20 @@ public class Simulation extends Thread {
 	public void run() {
 		log.info("Begin simulation");
 		long start = System.nanoTime();
-		for (Radio radio : allRadios) {
-			radio.start();
+		if (timing == ASYNC) {
+			for (Radio radio : allRadios) {
+				radio.start();
+			}
 		}
 		while (running) {
 			try {
 				Thread.sleep(100);
 				boolean done = true;
 				for (Radio radio : allRadios) {
-					if (radio.running)
-						done = false;
+					if (timing == SYNC) {
+						radio.nextStep();
+					}
+					if (radio.running) done = false;
 				}
 				running = !done;
 			} catch (InterruptedException e) {
@@ -41,14 +49,10 @@ public class Simulation extends Thread {
 				log.severe("Exception: " + e.toString());
 			}
 		}
-		long end = System.nanoTime();
+		timeSpent = System.nanoTime() - start;
 		log.info("End simulation");
-		log.info("Time spent: " + (end - start) / 1000000);
-		complete();
-	}
-
-	public Spectrum getSpectrum() {
-		return spectrum;
+		log.info("Time spent: " + timeSpent);
+		complete(timeSpent);
 	}
 
 	public void stopSimulation() {
@@ -58,9 +62,9 @@ public class Simulation extends Thread {
 		}
 	}
 
-	private void complete() {
+	private void complete(long timeSpent) {
 		for (SimListener simListener : simList) {
-			simListener.complete();
+			simListener.complete(timeSpent);
 		}
 	}
 
@@ -73,6 +77,26 @@ public class Simulation extends Thread {
 	}
 
 	interface SimListener {
-		public void complete();
+		public void complete(long timeSpent);
+	}
+
+	public void setTiming(int model) {
+		this.timing = model;
+	}
+
+	public String getRendezvousString() {
+		return rendezvousString;
+	}
+
+	public long getTimeSpent() {
+		return timeSpent;
+	}
+
+	public Spectrum getSpectrum() {
+		return spectrum;
+	}
+
+	public void setRendezvousString(String rendezvousString) {
+		this.rendezvousString = rendezvousString;
 	}
 }

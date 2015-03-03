@@ -1,7 +1,5 @@
 package pavlik.net.radio;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import pavlik.net.Channel.Channel;
@@ -14,7 +12,7 @@ public class Radio extends Thread implements ChannelListener {
 	Channel						currentChannel;
 	String						id;
 	RendezvousAlgorithm			algorithm;
-	boolean						running	= true;
+	public volatile boolean		running	= true;
 
 	public Radio(String name, RendezvousAlgorithm algorithm) {
 		log.info("Radio created: " + name);
@@ -31,26 +29,35 @@ public class Radio extends Thread implements ChannelListener {
 	public void nextChannel(boolean removeListener) {
 		if (removeListener) currentChannel.removeListener(this);
 		currentChannel = algorithm.nextChannel();
-		log.fine(id + " now on channel :" + currentChannel);
+		log.info(id + " now on channel :" + currentChannel);
 		currentChannel.addListener(this);
 	}
 
 	@Override
 	public void run() {
-		super.run();
 		while (running) {
 			nextChannel();
-			currentChannel.broadcastMessage(id + " " + "HELLO");
+			try {
+				Thread.sleep(Math.round((Math.random() * 100)));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: "
+					+ currentChannel.toString());
 		}
 	}
 
 	@Override
 	public void receiveBroadcast(String message) {
-		
 		if (message.startsWith(id)) return;
 		log.info("Message received: " + message);
-		currentChannel.broadcastMessage(id + " " + "HELLO");
-		running = false;
+		if (message.contains("0HELLO")) {
+			currentChannel.broadcastMessage(id + " 1" + "ACK on channel: "
+					+ currentChannel.toString());
+		}
+		if (message.contains("1ACK")) {
+			running = false;
+		}
 	}
 
 	public void stopSimulation() {

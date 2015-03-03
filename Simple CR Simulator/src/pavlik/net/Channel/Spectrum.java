@@ -1,13 +1,15 @@
 package pavlik.net.Channel;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 public class Spectrum {
 
-	static Set<Channel>			channelSet	= new HashSet<>();
-	private static final Logger	log			= Logger.getLogger(Spectrum.class.getName());
+	static Map<Integer, Channel>	channelSet	= new HashMap<>();
+	private static final Logger		log			= Logger.getLogger(Spectrum.class.getName());
 
 	/**
 	 * Build a set of channels and add them to the global list and return a set for local use
@@ -54,17 +56,21 @@ public class Spectrum {
 	}
 
 	private Channel buildChannel(int channelNum) {
-		Channel channel = new Channel(channelNum);
-		channelSet.add(channel);
-		return channel;
+		if (channelSet.containsKey(channelNum)) {
+			return channelSet.get(channelNum);
+		} else {
+			Channel channel = new Channel(channelNum);
+			channelSet.put(channelNum, channel);
+			return channel;
+		}
 	}
 
-	/**
-	 * Get a set of all channels in the spectrum
-	 * 
-	 * @return a Set of Channel
-	 */
-	public Set<Channel> getChannels() {
-		return channelSet;
-	}
+	// /**
+	// * Get a set of all channels in the spectrum
+	// *
+	// * @return a Set of Channel
+	// */
+	// public Set<Channel> getChannels() {
+	// return channelSet;
+	// }
 }

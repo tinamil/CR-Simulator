@@ -6,7 +6,6 @@ import java.awt.event.WindowEvent;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -15,7 +14,9 @@ import javax.swing.WindowConstants;
 
 public class GraphicalInterface extends JFrame {
 
-	private static final Logger	log	= Logger.getLogger(GraphicalInterface.class.getName());
+	private static final long	serialVersionUID	= 1L;
+	private static final Logger	log					= Logger.getLogger(GraphicalInterface.class
+															.getName());
 
 	public static void main(String[] args) {
 		try {
@@ -34,6 +35,7 @@ public class GraphicalInterface extends JFrame {
 
 	public GraphicalInterface() {
 		super();
+		log.fine("Setting up GUI");
 		sim = ConfigurationLoader.loadConfiguration();
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		/**
@@ -56,7 +58,5 @@ public class GraphicalInterface extends JFrame {
 
 		JTextArea textArea = new JTextArea();
 		add(textArea, BorderLayout.CENTER);
-		
-		JPanel buttonPanel = new JPanel();
 	}
 }

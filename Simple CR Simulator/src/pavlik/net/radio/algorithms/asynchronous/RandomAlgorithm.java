@@ -1,14 +1,14 @@
-package pavlik.net.radio.algorithms;
+package pavlik.net.radio.algorithms.asynchronous;
 
 import pavlik.net.Channel.Channel;
 import pavlik.net.radio.RendezvousAlgorithm;
 
-public class Random extends RendezvousAlgorithm {
+public class RandomAlgorithm extends RendezvousAlgorithm {
 
 	Channel[]			channels;
 	java.util.Random	rand	= new java.util.Random();
 
-	public Random(Channel[] channels) {
+	public RandomAlgorithm(Channel[] channels) {
 		super(channels);
 		this.channels = channels;
 	}

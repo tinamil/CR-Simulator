@@ -8,11 +8,13 @@ import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
 public class Simulation extends Thread {
-	private static final Logger	log			= Logger.getLogger(Simulation.class.getName());
-	long						currentTime	= 0;
-	final Spectrum				spectrum	= new Spectrum();
-	Set<Radio>					allRadios	= new HashSet<Radio>();
-	private volatile boolean	running		= true;
+	private static final Logger log = Logger.getLogger(Simulation.class
+			.getName());
+	long currentTime = 0;
+	final Spectrum spectrum = new Spectrum();
+	Set<Radio> allRadios = new HashSet<>();
+	private volatile boolean running = true;
+	Set<SimListener> simList = new HashSet<>();
 
 	public void addRadios(Set<Radio> radios) {
 		allRadios.addAll(radios);
@@ -30,7 +32,8 @@ public class Simulation extends Thread {
 				Thread.sleep(100);
 				boolean done = true;
 				for (Radio radio : allRadios) {
-					if (radio.running) done = false;
+					if (radio.running)
+						done = false;
 				}
 				running = !done;
 			} catch (InterruptedException e) {
@@ -41,6 +44,7 @@ public class Simulation extends Thread {
 		long end = System.nanoTime();
 		log.info("End simulation");
 		log.info("Time spent: " + (end - start) / 1000000);
+		complete();
 	}
 
 	public Spectrum getSpectrum() {
@@ -52,5 +56,23 @@ public class Simulation extends Thread {
 		for (Radio radio : allRadios) {
 			radio.stopSimulation();
 		}
+	}
+
+	private void complete() {
+		for (SimListener simListener : simList) {
+			simListener.complete();
+		}
+	}
+
+	public boolean addListener(SimListener listener) {
+		return simList.add(listener);
+	}
+
+	public boolean removeListener(SimListener listener) {
+		return simList.remove(listener);
+	}
+
+	interface SimListener {
+		public void complete();
 	}
 }

@@ -23,7 +23,8 @@ public class TextInterface {
 
 	private static void executeSim() {
 		index %= configFiles.length;
-		Simulation sim = ConfigurationLoader.loadConfiguration(configFiles[index++]);
+		Simulation sim = ConfigurationLoader.loadConfiguration(configFiles[index]);
+		index += 1;
 		sim.addListener(new TextInterface().new TextListener(sim));
 		sim.start();
 	}

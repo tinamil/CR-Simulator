@@ -9,7 +9,6 @@ public class ShortSequenceBased extends RendezvousAlgorithm {
 
 	private Channel[]	channels;
 	private int			index;
-	private int			round	= 0;
 	private Random		rand	= new Random();
 
 	public ShortSequenceBased(Channel[] channels) {
@@ -21,14 +20,13 @@ public class ShortSequenceBased extends RendezvousAlgorithm {
 	@Override
 	public Channel nextChannel() {
 		index += 1;
-		if (index % channels.length == 0) {
-			round += 1;
+		if (index >= channels.length * 2) {
+			index = 0;
 		}
-		if (round * (2 * channels.length - 1) <= index
-				&& index < round * (2 * channels.length - 1) + channels.length) {
-			return channels[(round + index) % channels.length];
+		if (0 <= index && index < channels.length) {
+			return channels[index];
 		} else {
-			return channels[channels.length - 2 - ((round + index) % channels.length)];
+			return channels[channels.length - 1 - index % channels.length];
 		}
 	}
 }

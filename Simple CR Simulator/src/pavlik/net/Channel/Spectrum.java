@@ -8,8 +8,8 @@ import java.util.logging.Logger;
 
 public class Spectrum {
 
-	static Map<Integer, Channel>	channelSet	= new HashMap<>();
-	private static final Logger		log			= Logger.getLogger(Spectrum.class.getName());
+	Map<Integer, Channel>		channelSet	= new HashMap<>();
+	private static final Logger	log			= Logger.getLogger(Spectrum.class.getName());
 
 	/**
 	 * Build a set of channels and add them to the global list and return a set for local use

@@ -35,10 +35,11 @@ public class ConfigurationLoader {
 														.getName());
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
-	public static Simulation loadConfiguration() {
+	public static Simulation loadConfiguration(String configString) {
 		log.fine("Loading configuration");
-		File defaultConfig = new File("DefaultConfiguration.xml");
-		Document document = readXML(defaultConfig);
+		if (configString == null) configString = defaultConfig;
+		File config = new File(configString);
+		Document document = readXML(config);
 		if (document == null) return null;
 		Simulation simulation = loadNetworkConfiguration(document);
 		loadRadiosConfiguration(document, simulation);
@@ -67,7 +68,7 @@ public class ConfigurationLoader {
 		Node root = networkList.item(0);
 		if (root.getNodeType() == Node.ELEMENT_NODE) {
 			Element rootElement = (Element) root;
-			String timingString = rootElement.getAttribute("timing");
+			String timingString = rootElement.getAttribute("timingType");
 			switch (timingString) {
 				case "asynchronous":
 				case "async":

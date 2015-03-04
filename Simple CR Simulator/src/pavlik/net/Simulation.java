@@ -8,17 +8,18 @@ import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
 public class Simulation extends Thread {
-	private static final Logger	log				= Logger.getLogger(Simulation.class.getName());
-	public static final int		SYNC			= 0;
-	public static final int		ASYNC			= 1;
+	private static final Logger	log					= Logger.getLogger(Simulation.class.getName());
+	public static final int		SYNC				= 0;
+	public static final int		ASYNC				= 1;
 
-	public int					timing;
-	private Set<Radio>			allRadios		= new HashSet<>();
-	private volatile boolean	running			= true;
-	private Set<SimListener>	simList			= new HashSet<>();
+	public int					timingType;
+	private Set<Radio>			allRadios			= new HashSet<>();
+	private volatile boolean	running				= true;
+	private Set<SimListener>	simList				= new HashSet<>();
 	private String				rendezvousString	= "";
-	public long					timeSpent		= 0;
-	private Spectrum			spectrum		= new Spectrum();
+	private long				clock				= 0;
+	private long				rounds				= 0;
+	private Spectrum			spectrum			= new Spectrum();
 
 	public void addRadios(Set<Radio> radios) {
 		allRadios.addAll(radios);
@@ -28,17 +29,18 @@ public class Simulation extends Thread {
 	public void run() {
 		log.info("Begin simulation");
 		long start = System.nanoTime();
-		if (timing == ASYNC) {
+		if (timingType == ASYNC) {
 			for (Radio radio : allRadios) {
 				radio.start();
 			}
 		}
 		while (running) {
 			try {
-				Thread.sleep(100);
+				if (timingType == ASYNC) Thread.sleep(100);
 				boolean done = true;
+				rounds += 1;
 				for (Radio radio : allRadios) {
-					if (timing == SYNC) {
+					if (timingType == SYNC) {
 						radio.nextStep();
 					}
 					if (radio.running) done = false;
@@ -49,10 +51,10 @@ public class Simulation extends Thread {
 				log.severe("Exception: " + e.toString());
 			}
 		}
-		timeSpent = System.nanoTime() - start;
+		clock = System.nanoTime() - start;
 		log.info("End simulation");
-		log.info("Time spent: " + timeSpent);
-		complete(timeSpent);
+		log.info("Time spent: " + clock);
+		complete(clock);
 	}
 
 	public void stopSimulation() {
@@ -81,7 +83,7 @@ public class Simulation extends Thread {
 	}
 
 	public void setTiming(int model) {
-		this.timing = model;
+		this.timingType = model;
 	}
 
 	public String getRendezvousString() {
@@ -89,7 +91,11 @@ public class Simulation extends Thread {
 	}
 
 	public long getTimeSpent() {
-		return timeSpent;
+		return clock;
+	}
+
+	public long getRounds() {
+		return rounds;
 	}
 
 	public Spectrum getSpectrum() {

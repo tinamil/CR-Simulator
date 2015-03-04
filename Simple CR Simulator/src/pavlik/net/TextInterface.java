@@ -9,7 +9,12 @@ import pavlik.net.Simulation.SimListener;
 
 public class TextInterface {
 	private static final Logger	log				= Logger.getLogger(TextInterface.class.getName());
-	private static int			totalRunCount	= 10;
+	private static int			totalRunCount	= 80000;
+
+	private static String[]		configFiles		= { "DRSEQConfig.xml", "EJSConfig.xml",
+			"JSConfig.xml", "MCConfig.xml", "MMCConfig.xml", "OrthogonalConfig.xml",
+			"RandomConfig.xml", "SSBConfig.xml" };
+	private static int			index			= 0;
 
 	public static void main(String[] args) throws IOException {
 		log.fine("Begin Main");
@@ -17,7 +22,8 @@ public class TextInterface {
 	}
 
 	private static void executeSim() {
-		Simulation sim = ConfigurationLoader.loadConfiguration();
+		index %= configFiles.length;
+		Simulation sim = ConfigurationLoader.loadConfiguration(configFiles[index++]);
 		sim.addListener(new TextInterface().new TextListener(sim));
 		sim.start();
 	}
@@ -31,13 +37,13 @@ public class TextInterface {
 
 		@Override
 		public void complete(long timeSpent) {
-			try (final BufferedWriter writer = new BufferedWriter(new FileWriter(sim
-					.getRendezvousString()
-					+ ".txt", true))) {
-				writer.write(Long.toString(sim.getTimeSpent()));
+			try (final BufferedWriter writer = new BufferedWriter(new FileWriter("output/"
+					+ sim.getRendezvousString() + ".txt", true))) {
+				writer.write(Long.toString(sim.getTimeSpent()) + "\t"
+						+ Long.toString(sim.getRounds()));
 				writer.newLine();
 				writer.flush();
-				if (totalRunCount-- > 0) {
+				if (--totalRunCount > 0) {
 					executeSim();
 				}
 			} catch (IOException e) {

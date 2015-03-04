@@ -9,11 +9,12 @@ import pavlik.net.Simulation.SimListener;
 
 public class TextInterface {
 	private static final Logger	log				= Logger.getLogger(TextInterface.class.getName());
-	private static int			totalRunCount	= 80000;
-
-	private static String[]		configFiles		= { "DRSEQConfig.xml", "EJSConfig.xml",
-			"JSConfig.xml", "MCConfig.xml", "MMCConfig.xml", "OrthogonalConfig.xml",
-			"RandomConfig.xml", "SSBConfig.xml" };
+	private static int			totalRunCount	= 350000;
+	static int					totalChannels	= 1000;
+	private static String[]		configFiles		= { totalChannels + "DRSEQConfig.xml",
+			totalChannels + "EJSConfig.xml", totalChannels + "JSConfig.xml",
+			totalChannels + "MCConfig.xml", totalChannels + "MMCConfig.xml",
+			totalChannels + "RandomConfig.xml", totalChannels + "SSBConfig.xml" };
 	private static int			index			= 0;
 
 	public static void main(String[] args) throws IOException {
@@ -38,8 +39,8 @@ public class TextInterface {
 
 		@Override
 		public void complete(long timeSpent) {
-			try (final BufferedWriter writer = new BufferedWriter(new FileWriter("output/"
-					+ sim.getRendezvousString() + ".txt", true))) {
+			try (final BufferedWriter writer = new BufferedWriter(new FileWriter("output"
+					+ totalChannels + "/" + sim.getRendezvousString() + ".txt", true))) {
 				writer.write(Long.toString(sim.getTimeSpent()) + "\t"
 						+ Long.toString(sim.getRounds()));
 				writer.newLine();

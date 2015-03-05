@@ -9,12 +9,12 @@ import pavlik.net.radio.RendezvousAlgorithm;
 
 public class ModifiedModularClock extends RendezvousAlgorithm {
 
-	Channel[]	channels;
-	int			index;
-	int			prime;
-	int			rate;
-	int			timeCount	= 0;
-	Random		rand		= new Random();
+	Channel[]		channels;
+	int				index;
+	int				prime;
+	int				rate;
+	int				timeCount	= 0;
+	static Random	rand		= new Random();
 
 	public ModifiedModularClock(Channel[] channels) {
 		super(channels);
@@ -41,7 +41,7 @@ public class ModifiedModularClock extends RendezvousAlgorithm {
 		}
 	}
 
-	public int randomPrime(int start, int end) {
+	public static int randomPrime(int start, int end) {
 		List<Integer> primes = new ArrayList<>();
 		for (int current = start; current <= end; current++) {
 			long sqr_root = (long) Math.sqrt(current);

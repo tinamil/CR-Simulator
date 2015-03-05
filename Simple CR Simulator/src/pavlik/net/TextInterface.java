@@ -9,8 +9,8 @@ import pavlik.net.Simulation.SimListener;
 
 public class TextInterface {
 	private static final Logger	log				= Logger.getLogger(TextInterface.class.getName());
-	private static int			totalRunCount	= 350000;
-	static int					totalChannels	= 1000;
+	private static int			totalRunCount	= 100;
+	private static int			totalChannels	= 750;
 	private static String[]		configFiles		= { totalChannels + "DRSEQConfig.xml",
 			totalChannels + "EJSConfig.xml", totalChannels + "JSConfig.xml",
 			totalChannels + "MCConfig.xml", totalChannels + "MMCConfig.xml",

@@ -35,14 +35,20 @@ public class ConfigurationLoader {
 														.getName());
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
-	public static Simulation loadConfiguration(String configString) {
+	public static Simulation loadConfiguration(File configFile, String channels, String timing) {
 		log.fine("Loading configuration");
-		if (configString == null) configString = defaultConfig;
-		File config = new File(configString);
+		File config;
+		if (configFile == null) config = new File(defaultConfig);
+		else config = configFile;
 		Document document = readXML(config);
 		if (document == null) return null;
+
 		Simulation simulation = loadNetworkConfiguration(document);
-		loadRadiosConfiguration(document, simulation);
+		if (timing != null) {
+			simulation.setTiming(timing);
+		}
+
+		loadRadiosConfiguration(document, simulation, channels);
 		return simulation;
 	}
 
@@ -69,16 +75,7 @@ public class ConfigurationLoader {
 		if (root.getNodeType() == Node.ELEMENT_NODE) {
 			Element rootElement = (Element) root;
 			String timingString = rootElement.getAttribute("timingType");
-			switch (timingString) {
-				case "asynchronous":
-				case "async":
-					sim.setTiming(Simulation.ASYNC);
-					break;
-				case "slotted":
-				case "sync":
-				case "synchronous":
-					sim.setTiming(Simulation.SYNC);
-			}
+			sim.setTiming(timingString);
 			String rendezvousString = rootElement.getAttribute("algorithm");
 			sim.setRendezvousString(rendezvousString);
 		} else {
@@ -87,7 +84,8 @@ public class ConfigurationLoader {
 		return sim;
 	}
 
-	private static void loadRadiosConfiguration(Document doc, Simulation simulation) {
+	private static void loadRadiosConfiguration(Document doc, Simulation simulation,
+			String channelOverride) {
 		log.fine("Loading radios");
 		Set<Radio> radioSet = new HashSet<>();
 		NodeList nodeList = doc.getElementsByTagName("radio");
@@ -98,6 +96,7 @@ public class ConfigurationLoader {
 				Element eElement = (Element) node;
 				String name = eElement.getAttribute("name");
 				String channelString = eElement.getAttribute("channels");
+				if (channelOverride != null) channelString = channelOverride;
 				Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
 				RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(simulation
 						.getRendezvousString(), channels);

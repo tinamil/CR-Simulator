@@ -1,5 +1,7 @@
 package pavlik.net.radio.algorithms.synchronous;
 
+import java.util.Arrays;
+
 import pavlik.net.Channel.Channel;
 import pavlik.net.radio.RendezvousAlgorithm;
 
@@ -11,11 +13,14 @@ import pavlik.net.radio.RendezvousAlgorithm;
 public class GeneratedOrthogonalSequence extends RendezvousAlgorithm {
 
 	Channel[] channels;
-	int index = 0;
+	java.util.Random rnd = new java.util.Random();
+	int index;
 
 	public GeneratedOrthogonalSequence(Channel[] channels) {
 		super(channels);
-		this.channels = buildSequence(permutation(channels));
+		Arrays.sort(channels);
+		this.channels = buildSequence(channels);
+		this.index = rnd.nextInt(channels.length);
 	}
 
 	/**
@@ -25,17 +30,16 @@ public class GeneratedOrthogonalSequence extends RendezvousAlgorithm {
 	 * @param channels2
 	 * @return
 	 */
-	private Channel[] permutation(Channel[] inputChannels) {
-		java.util.Random rnd = new java.util.Random();
-		for (int i = inputChannels.length - 1; i > 0; i--) {
-			int index = rnd.nextInt(i + 1);
-			// Simple swap
-			Channel a = inputChannels[index];
-			inputChannels[index] = inputChannels[i];
-			inputChannels[i] = a;
-		}
-		return inputChannels;
-	}
+//	private Channel[] permutation(Channel[] inputChannels) {
+//		for (int i = inputChannels.length - 1; i > 0; i--) {
+//			int index = rnd.nextInt(i + 1);
+//			// Simple swap
+//			Channel a = inputChannels[index];
+//			inputChannels[index] = inputChannels[i];
+//			inputChannels[i] = a;
+//		}
+//		return inputChannels;
+//	}
 
 	@Override
 	public Channel nextChannel() {

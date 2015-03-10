@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class Channel {
+public class Channel implements Comparable<Channel> {
 	private static final Logger	log	= Logger.getLogger(Channel.class.getName());
 	int							id;
 	Set<ChannelListener>		listeners;
@@ -44,5 +44,10 @@ public class Channel {
 	@Override
 	public String toString() {
 		return Integer.toString(id);
+	}
+
+	@Override
+	public int compareTo(Channel o) {
+		return Integer.compare(id, o.id);
 	}
 }

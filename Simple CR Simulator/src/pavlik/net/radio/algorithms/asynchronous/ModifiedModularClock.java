@@ -21,7 +21,7 @@ public class ModifiedModularClock extends RendezvousAlgorithm {
 		this.channels = channels;
 		this.index = rand.nextInt(channels.length);
 		this.prime = randomPrime(channels.length, channels.length * 2);
-		this.rate = rand.nextInt(channels.length);
+		this.rate = rand.nextInt(channels.length-2) + 2;
 	}
 
 	@Override
@@ -29,7 +29,7 @@ public class ModifiedModularClock extends RendezvousAlgorithm {
 		timeCount += 1;
 		if (timeCount > 2 * (prime * prime)) {
 			this.prime = randomPrime(channels.length, channels.length * 2);
-			this.rate = rand.nextInt(channels.length);
+			this.rate = rand.nextInt(channels.length - 2) + 2;
 			timeCount = 0;
 		}
 		index += rate;

@@ -43,7 +43,7 @@ public class Simulation extends Thread {
 					if (timingType == SYNC) {
 						radio.nextStep();
 					}
-					if (radio.running) done = false;
+					if (radio.isSyncComplete()) done = false;
 				}
 				running = !done;
 			} catch (InterruptedException e) {

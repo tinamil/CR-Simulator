@@ -2,6 +2,7 @@ package pavlik.net.radio;
 
 import pavlik.net.Channel.Channel;
 import pavlik.net.radio.algorithms.asynchronous.EnhancedJumpStay;
+import pavlik.net.radio.algorithms.asynchronous.FrequencyHopping;
 import pavlik.net.radio.algorithms.asynchronous.JumpStay;
 import pavlik.net.radio.algorithms.asynchronous.ModifiedModularClock;
 import pavlik.net.radio.algorithms.asynchronous.RandomAlgorithm;
@@ -9,6 +10,8 @@ import pavlik.net.radio.algorithms.asynchronous.ShortSequenceBased;
 import pavlik.net.radio.algorithms.synchronous.DRSEQ;
 import pavlik.net.radio.algorithms.synchronous.GeneratedOrthogonalSequence;
 import pavlik.net.radio.algorithms.synchronous.ModularClock;
+import pavlik.net.radio.protocol.DefaultRadioProtocol;
+import pavlik.net.radio.protocol.RadioProtocol;
 
 public abstract class RendezvousAlgorithm {
 
@@ -38,8 +41,14 @@ public abstract class RendezvousAlgorithm {
 				return new DRSEQ(channels);
 			case "ssb":
 				return new ShortSequenceBased(channels);
+			case "fh":
+				return new FrequencyHopping(channels);
 			default:
 				return null;
 		}
+	}
+
+	public RadioProtocol getProtocol(String id){
+		return new DefaultRadioProtocol(id);
 	}
 }

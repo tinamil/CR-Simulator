@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<network timing="sync" algorithm="mmc">
-	<radio name="1" channels="1-750" />
-	<radio name="2" channels="1-750" />
-</network>

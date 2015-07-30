@@ -21,7 +21,7 @@ public class ModularClock extends RendezvousAlgorithm {
 		this.prime = BigInteger.valueOf(channels.length).nextProbablePrime()
 				.intValue();
 		this.index = rand.nextInt(channels.length);
-		this.rate = rand.nextInt(prime);
+		this.rate = rand.nextInt(channels.length - 2) +2;
 	}
 
 	@Override

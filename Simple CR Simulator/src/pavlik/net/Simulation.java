@@ -105,4 +105,20 @@ public class Simulation extends Thread {
 	public void setRendezvousString(String rendezvousString) {
 		this.rendezvousString = rendezvousString;
 	}
+
+	public void setTiming(String timingString) {
+		switch (timingString) {
+			case "asynchronous":
+			case "async":
+				setTiming(Simulation.ASYNC);
+				break;
+			case "slotted":
+			case "sync":
+			case "synchronous":
+				setTiming(Simulation.SYNC);
+				break;
+			default:
+				setTiming(Simulation.SYNC);
+		}
+	}
 }

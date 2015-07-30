@@ -39,7 +39,7 @@ public class EnhancedJumpStay extends RendezvousAlgorithm {
 		} else {
 			j = r0;
 		}
-		if (j > channels.length) j = ((j - 1) % channels.length) + 1;
-		return channels[j - 1];
+		if (j >= channels.length) j %= channels.length;
+		return channels[j];
 	}
 }

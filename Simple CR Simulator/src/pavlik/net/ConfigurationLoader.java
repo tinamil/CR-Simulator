@@ -35,7 +35,7 @@ public class ConfigurationLoader {
 														.getName());
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
-	public static Simulation loadConfiguration(File configFile, String channels, String timing) {
+	public static Simulation loadConfiguration(File configFile, String channelsOverride, String timingOverride) {
 		log.fine("Loading configuration");
 		File config;
 		if (configFile == null) config = new File(defaultConfig);
@@ -44,11 +44,11 @@ public class ConfigurationLoader {
 		if (document == null) return null;
 
 		Simulation simulation = loadNetworkConfiguration(document);
-		if (timing != null) {
-			simulation.setTiming(timing);
+		if (timingOverride != null) {
+			simulation.setTiming(timingOverride);
 		}
 
-		loadRadiosConfiguration(document, simulation, channels);
+		loadRadiosConfiguration(document, simulation, channelsOverride);
 		return simulation;
 	}
 

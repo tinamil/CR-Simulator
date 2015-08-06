@@ -15,6 +15,9 @@ import pavlik.net.radio.protocol.RadioProtocol;
 
 public abstract class RendezvousAlgorithm {
 
+	volatile long	lastHopTime	= 0;
+	long			HOP_RATE	= 9;	// ms
+
 	public abstract Channel nextChannel();
 
 	public RendezvousAlgorithm(Channel[] channels) {
@@ -48,7 +51,19 @@ public abstract class RendezvousAlgorithm {
 		}
 	}
 
-	public RadioProtocol getProtocol(String id){
+	public RadioProtocol getProtocol(String id) {
 		return new DefaultRadioProtocol(id);
+	}
+
+	public void pauseForHop() {
+		long currentTime = System.currentTimeMillis();
+		while (currentTime - lastHopTime < HOP_RATE) {
+			try {
+				Thread.sleep(currentTime - lastHopTime);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		lastHopTime = currentTime;
 	}
 }

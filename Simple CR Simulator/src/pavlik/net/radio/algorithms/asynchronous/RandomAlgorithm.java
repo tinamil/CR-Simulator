@@ -8,8 +8,8 @@ public class RandomAlgorithm extends RendezvousAlgorithm {
 	Channel[]			channels;
 	java.util.Random	rand	= new java.util.Random();
 
-	public RandomAlgorithm(Channel[] channels) {
-		super(channels);
+	public RandomAlgorithm(String id, Channel[] channels) {
+		super(id);
 		this.channels = channels;
 	}
 

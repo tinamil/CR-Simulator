@@ -15,8 +15,8 @@ public class ModularClock extends RendezvousAlgorithm {
 	int timeCount = 0;
 	Random rand = new Random();
 
-	public ModularClock(Channel[] channels) {
-		super(channels);
+	public ModularClock(String id, Channel[] channels) {
+		super(id);
 		this.channels = channels;
 		this.prime = BigInteger.valueOf(channels.length).nextProbablePrime()
 				.intValue();

@@ -11,8 +11,8 @@ public class ShortSequenceBased extends RendezvousAlgorithm {
 	private int			index;
 	private Random		rand	= new Random();
 
-	public ShortSequenceBased(Channel[] channels) {
-		super(channels);
+	public ShortSequenceBased(String id, Channel[] channels) {
+		super(id);
 		this.channels = channels;
 		this.index = rand.nextInt(channels.length);
 	}

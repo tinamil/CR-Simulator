@@ -3,14 +3,12 @@ package pavlik.net.radio;
 import java.util.logging.Logger;
 
 import pavlik.net.Channel.Channel;
-import pavlik.net.radio.protocol.RadioProtocol;
 
 public class Radio extends Thread {
 
 	private static final Logger log = Logger.getLogger(Radio.class.getName());
 
 	String				id;
-	RadioProtocol		listener;
 	volatile boolean	running	= true;
 	Channel				currentChannel;
 	RendezvousAlgorithm	algorithm;
@@ -19,12 +17,11 @@ public class Radio extends Thread {
 		log.info("Radio created: " + name);
 		this.id = name;
 		this.algorithm = algorithm;
-		this.listener = algorithm.getProtocol(name);
 	}
 
 	@Override
 	public void run() {
-		while (running && !listener.isSynced()) {
+		while (running && !isSyncComplete()) {
 			nextStep();
 		}
 	}
@@ -36,21 +33,21 @@ public class Radio extends Thread {
 	public void nextStep() {
 		if (running) {
 			nextChannel();
-			listener.broadcastSync(currentChannel);
+			algorithm.broadcastSync(currentChannel);
 			algorithm.pauseForHop();
 		}
 	}
 
 	public void nextChannel() {
 		if (currentChannel != null) {
-			currentChannel.removeListener(listener);
+			currentChannel.removeListener(algorithm);
 		}
 		currentChannel = algorithm.nextChannel();
 		log.info(id + " now on channel :" + currentChannel);
-		currentChannel.addListener(listener);
+		currentChannel.addListener(algorithm);
 	}
 
 	public boolean isSyncComplete() {
-		return listener.isSynced();
+		return algorithm.isSynced();
 	}
 }

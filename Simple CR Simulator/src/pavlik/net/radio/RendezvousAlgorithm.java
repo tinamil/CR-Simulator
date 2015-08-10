@@ -1,5 +1,7 @@
 package pavlik.net.radio;
 
+import java.util.logging.Logger;
+
 import pavlik.net.Channel.Channel;
 import pavlik.net.radio.algorithms.asynchronous.EnhancedJumpStay;
 import pavlik.net.radio.algorithms.asynchronous.FrequencyHopping;
@@ -10,49 +12,78 @@ import pavlik.net.radio.algorithms.asynchronous.ShortSequenceBased;
 import pavlik.net.radio.algorithms.synchronous.DRSEQ;
 import pavlik.net.radio.algorithms.synchronous.GeneratedOrthogonalSequence;
 import pavlik.net.radio.algorithms.synchronous.ModularClock;
-import pavlik.net.radio.protocol.DefaultRadioProtocol;
 import pavlik.net.radio.protocol.RadioProtocol;
 
-public abstract class RendezvousAlgorithm {
+public abstract class RendezvousAlgorithm implements RadioProtocol {
 
-	volatile long	lastHopTime	= 0;
-	long			HOP_RATE	= 9;	// ms
+	private static final Logger	log			= Logger.getLogger(RendezvousAlgorithm.class.getName());
+	protected long				lastHopTime	= 0;
+	/**
+	 * 9 ms / 111 hz by default, can be overriden by a specific implementation
+	 */
+	protected static long		HOP_RATE	= 9;
+	boolean						synced		= false;
+	protected String			id;
 
 	public abstract Channel nextChannel();
 
-	public RendezvousAlgorithm(Channel[] channels) {
-
+	public RendezvousAlgorithm(String id) {
+		this.id = id;
 	}
 
-	public static RendezvousAlgorithm getAlgorithm(String rendezvousString, Channel[] channels) {
+	public static RendezvousAlgorithm getAlgorithm(String rendezvousString, String id,
+			Channel[] channels) {
 		switch (rendezvousString) {
 			case "random":
-				return new RandomAlgorithm(channels);
+				return new RandomAlgorithm(id, channels);
 			case "orthogonal":
-				return new GeneratedOrthogonalSequence(channels);
+				return new GeneratedOrthogonalSequence(id, channels);
 			case "mc":
-				return new ModularClock(channels);
+				return new ModularClock(id, channels);
 			case "mmc":
-				return new ModifiedModularClock(channels);
+				return new ModifiedModularClock(id, channels);
 			case "jumpstay":
 			case "js":
-				return new JumpStay(channels);
+				return new JumpStay(id, channels);
 			case "enhancedjumpstay":
 			case "ejs":
-				return new EnhancedJumpStay(channels);
+				return new EnhancedJumpStay(id, channels);
 			case "drseq":
-				return new DRSEQ(channels);
+				return new DRSEQ(id, channels);
 			case "ssb":
-				return new ShortSequenceBased(channels);
+				return new ShortSequenceBased(id, channels);
 			case "fh":
-				return new FrequencyHopping(channels);
+				return new FrequencyHopping(id, channels);
 			default:
 				return null;
 		}
 	}
 
-	public RadioProtocol getProtocol(String id) {
-		return new DefaultRadioProtocol(id);
+	@Override
+	public void receiveBroadcast(Channel currentChannel, String message) {
+		if (message.startsWith(id)) return;
+		log.info("Message received: " + message);
+		if (message.contains("0HELLO")) {
+			currentChannel.broadcastMessage(id + " 1" + "ACKHELLO on channel: " + currentChannel
+					.toString());
+		}
+		if (message.contains("1ACKHELLO")) {
+			currentChannel.broadcastMessage(id + " 2ACK");
+			synced = true;
+		}
+		if (message.contains("2ACK")) {
+			synced = true;
+		}
+	}
+
+	@Override
+	public void broadcastSync(Channel currentChannel) {
+		currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: " + currentChannel
+				.toString());
+	}
+
+	public boolean isSynced() {
+		return synced;
 	}
 
 	public void pauseForHop() {

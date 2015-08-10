@@ -16,8 +16,8 @@ public class GeneratedOrthogonalSequence extends RendezvousAlgorithm {
 	java.util.Random rnd = new java.util.Random();
 	int index;
 
-	public GeneratedOrthogonalSequence(Channel[] channels) {
-		super(channels);
+	public GeneratedOrthogonalSequence(String id, Channel[] channels) {
+		super(id);
 		Arrays.sort(channels);
 		this.channels = buildSequence(channels);
 		this.index = rnd.nextInt(channels.length);

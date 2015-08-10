@@ -11,8 +11,8 @@ public class DRSEQ extends RendezvousAlgorithm {
 	int			index;
 	Random		rand	= new Random();
 
-	public DRSEQ(Channel[] channels) {
-		super(channels);
+	public DRSEQ(String id, Channel[] channels) {
+		super(id);
 		this.channels = channels;
 		this.index = rand.nextInt(channels.length);
 	}

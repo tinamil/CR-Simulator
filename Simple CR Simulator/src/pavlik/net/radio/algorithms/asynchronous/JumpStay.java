@@ -13,8 +13,8 @@ public class JumpStay extends RendezvousAlgorithm {
 	int			r0, i0, t;
 	Random		rand	= new Random();
 
-	public JumpStay(Channel[] channels) {
-		super(channels);
+	public JumpStay(String id, Channel[] channels) {
+		super(id);
 		this.channels = channels;
 		this.prime = BigInteger.valueOf(channels.length).nextProbablePrime().intValue();
 		this.r0 = rand.nextInt(channels.length) + 1;

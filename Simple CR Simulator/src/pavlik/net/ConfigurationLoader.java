@@ -32,10 +32,11 @@ import pavlik.net.radio.RendezvousAlgorithm;
  */
 public class ConfigurationLoader {
 	private static final Logger	log				= Logger.getLogger(ConfigurationLoader.class
-														.getName());
+			.getName());
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
-	public static Simulation loadConfiguration(File configFile, String channelsOverride, String timingOverride) {
+	public static Simulation loadConfiguration(File configFile, String channelsOverride,
+			String timingOverride) {
 		log.fine("Loading configuration");
 		File config;
 		if (configFile == null) config = new File(defaultConfig);
@@ -99,7 +100,7 @@ public class ConfigurationLoader {
 				if (channelOverride != null) channelString = channelOverride;
 				Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
 				RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(simulation
-						.getRendezvousString(), channels);
+						.getRendezvousString(), name, channels);
 				Radio radio = new Radio(name, algorithm);
 				radioSet.add(radio);
 			} else {

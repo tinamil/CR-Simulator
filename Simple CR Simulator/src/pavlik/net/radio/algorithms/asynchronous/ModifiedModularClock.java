@@ -16,8 +16,8 @@ public class ModifiedModularClock extends RendezvousAlgorithm {
 	int				timeCount	= 0;
 	static Random	rand		= new Random();
 
-	public ModifiedModularClock(Channel[] channels) {
-		super(channels);
+	public ModifiedModularClock(String id, Channel[] channels) {
+		super(id);
 		this.channels = channels;
 		this.index = rand.nextInt(channels.length);
 		this.prime = randomPrime(channels.length, channels.length * 2);

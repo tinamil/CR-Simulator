@@ -75,7 +75,7 @@ public class ConfigurationLoader {
 		Node root = networkList.item(0);
 		if (root.getNodeType() == Node.ELEMENT_NODE) {
 			Element rootElement = (Element) root;
-			String timingString = rootElement.getAttribute("timingType");
+			String timingString = rootElement.getAttribute("timing");
 			sim.setTiming(timingString);
 			String rendezvousString = rootElement.getAttribute("algorithm");
 			sim.setRendezvousString(rendezvousString);

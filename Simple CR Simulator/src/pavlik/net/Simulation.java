@@ -8,9 +8,9 @@ import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
 public class Simulation extends Thread {
-	private static final Logger	log					= Logger.getLogger(Simulation.class.getName());
-	public static final int		SYNC				= 0;
-	public static final int		ASYNC				= 1;
+	private static final Logger	log		= Logger.getLogger(Simulation.class.getName());
+	public static final int		SYNC	= 0;
+	public static final int		ASYNC	= 1;
 
 	public int					timingType;
 	private Set<Radio>			allRadios			= new HashSet<>();
@@ -118,7 +118,7 @@ public class Simulation extends Thread {
 				setTiming(Simulation.SYNC);
 				break;
 			default:
-				setTiming(Simulation.SYNC);
+				throw new RuntimeException("Invalid timing type: " + timingString);
 		}
 	}
 }

@@ -21,7 +21,7 @@ public class Radio extends Thread {
 
 	@Override
 	public void run() {
-		while (running && !isSyncComplete()) {
+		while (running) {
 			nextStep();
 		}
 	}

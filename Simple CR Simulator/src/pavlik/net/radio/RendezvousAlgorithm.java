@@ -17,7 +17,7 @@ import pavlik.net.radio.protocol.RadioProtocol;
 public abstract class RendezvousAlgorithm implements RadioProtocol {
 
 	private static final Logger	log			= Logger.getLogger(RendezvousAlgorithm.class.getName());
-	protected long				lastHopTime	= 0;
+	protected long				lastHopTime	= System.currentTimeMillis();
 	/**
 	 * 9 ms / 111 hz by default, can be overriden by a specific implementation
 	 */

@@ -29,32 +29,26 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 
 	private static final Logger log = Logger.getLogger(FrequencyHopping.class.getName());
 
+	private static boolean firstRadioSetup = false;
+
 	// Seed will be generated the first time this class is instantiated
 	private static byte[]	SEED		= null;
 	private static int		SEED_SIZE	= 512;
 
-	// The radios clock will be set to current time plus/minus the MAX_TIME_OFFSET
+	// The radios clock will be set to between the current time and the current time + MAX_TIME_OFFSET
 	private static long	MAX_TIME_OFFSET	= 4000;
 	private long		timeOffset;
 	private long		startTime;
-
-	// Number of required hops to be correct in order to synchronize
-	private static final long REQUIRED_SYNC_HOPS = 10;
-
-	// Maximum number of hop attempts to synchronize before aborting
-	private static final long MAX_SYNC_HOPS = 20;
 
 	// Modifier applied to base HOP_RATE in order to search for the right network during the Seeking
 	// phase
 	private static final double SEARCH_SPEED = 0.5;
 
-	// Number of successful hop attempts
-	long hitCount = 0;
-
-	boolean synced = false;
+	// Uncomment to override and slow down to 1 second hops for debug
+	protected static long HOP_RATE = 1000;
 
 	// Number of channels in the sliding window
-	private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1) * 2;
+	private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1);
 
 	// A sliding time window of indices into the channels[]
 	int[] slidingWindow = new int[WINDOW_CHANNEL_COUNT];
@@ -66,7 +60,20 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	int lastWindowUpdate;
 
 	private enum State {
-		SeekingRendezvous, OperatingNetwork, Syncing
+		MasterNetworkRadio, SeekingRendezvous, OperatingNetwork, Syncing;
+
+		// The count of how many hops have been made in the current sync attempt
+		private long currentHop = 0;
+
+		// Number of successful hop attempts
+		private long hitCount = 0;
+
+		// Number of required hops to be correct in order to synchronize
+		private static final long REQUIRED_SYNC_HOPS = 10;
+
+		// Maximum number of hop attempts to synchronize before aborting
+		private static final long MAX_SYNC_HOPS = 20;
+
 	}
 
 	State		state;
@@ -88,7 +95,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		secureRand = new java.security.SecureRandom(SEED);
 
 		// Setup a random time offset that is plus or minus the MAX_TIME_OFFSET
-		timeOffset = (new Random().nextLong() % (2 * MAX_TIME_OFFSET + 1)) - MAX_TIME_OFFSET;
+		timeOffset = (Math.abs(new Random().nextLong()) % MAX_TIME_OFFSET);
 
 		startTime = getCurrentMillis();
 
@@ -104,7 +111,13 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		initializeSlidingWindow();
 
 		// Default to a Seeking Rendezvous state
-		this.state = State.SeekingRendezvous;
+		if (!firstRadioSetup) {
+			firstRadioSetup = true;
+			this.state = State.MasterNetworkRadio;
+			log.info("Radio " + id + " is the master network radio");
+		} else {
+			this.state = State.SeekingRendezvous;
+		}
 	}
 
 	@Override
@@ -119,7 +132,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	private int generateSecureRandomInt() {
 		byte[] bytes = new byte[4];
 		secureRand.nextBytes(bytes);
-		int nextVal = ByteBuffer.wrap(bytes).getInt();
+		int nextVal = Math.abs(ByteBuffer.wrap(bytes).getInt());
 		return nextVal;
 	}
 
@@ -131,6 +144,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	}
 
 	private void updateSlidingWindow() {
+		//TODO: this the offset is being subtracted out, making radios start synchronized
 		long currentNetworkRound = (getCurrentMillis() - startTime) / HOP_RATE;
 		while (lastWindowUpdate <= currentNetworkRound) {
 			slidingWindow[lastWindowUpdate % WINDOW_CHANNEL_COUNT] = generateSecureRandomInt()
@@ -145,41 +159,103 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 
 	@Override
 	public void receiveBroadcast(Channel currentChannel, String message) {
+		// Ignore any messages sent from this radio (every radio always hears its own broadcast)
 		if (message.startsWith(id)) return;
-		log.info("Message received: " + message);
-		if (message.contains("0HELLO")) {
-			state = State.Syncing;
-			//TODO Transition to Syncing state
-			hitCount += 1;
-			currentChannel.broadcastMessage(id + " 1" + "ACKHELLO on channel: " + currentChannel
-					.toString());
-		}
-		if (message.contains("1ACKHELLO")) {
-			hitCount += 1;
-		}
 
-		if (hitCount >= REQUIRED_SYNC_HOPS) synced = true;
+		log.info("Message received: " + message);
+
+		switch (state) {
+
+			case MasterNetworkRadio:
+				break;
+
+			case OperatingNetwork:
+				break;
+
+			case SeekingRendezvous:
+				if (message.contains("0HELLO")) {
+					log.info("Radio " + id + " switching SYNCING state");
+					state = State.Syncing;
+					lastHopTime = getCurrentMillis() + 1;
+					state.currentHop = 0;
+					state.hitCount = 0;
+					// currentChannel.broadcastMessage(id + " 1" + "ACKHELLO on channel: "
+					// + currentChannel.toString());
+				}
+				break;
+
+			case Syncing:
+				if (message.contains("0HELLO")) {
+					log.info("Syncing success, up to " + state.hitCount);
+					state.hitCount += 1;
+				}
+				if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
+					log.info("Radio " + id + " switching DONE state");
+					state = State.OperatingNetwork;
+				}
+				break;
+
+			default:
+				throw new RuntimeException("Invalid state defined: " + state);
+		}
 	}
 
 	@Override
 	public void broadcastSync(Channel currentChannel) {
-		currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: " + currentChannel
-				.toString());
+		switch (state) {
+
+			case MasterNetworkRadio:
+				currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: " + currentChannel
+						.toString());
+				break;
+
+			case OperatingNetwork:
+				break;
+
+			case SeekingRendezvous:
+				// Don't broadcast anything, just listen for messages from the master network
+				break;
+
+			case Syncing:
+				state.currentHop += 1;
+				if (state.currentHop > State.MAX_SYNC_HOPS) {
+					log.info("Radio " + id + " switching back to SEEKING state");
+					state = State.SeekingRendezvous;
+				}
+				break;
+
+			default:
+				throw new RuntimeException("Undefined state: " + state + " received in radio: "
+						+ id);
+		}
 	}
 
 	@Override
 	public boolean isSynced() {
-		return synced;
+		switch (state) {
+			case MasterNetworkRadio:
+			case OperatingNetwork:
+				return true;
+
+			case SeekingRendezvous:
+			case Syncing:
+				return false;
+			default:
+				throw new RuntimeException("Undefined state: " + state);
+		}
 	}
 
 	private long getStateHopRate() {
 		long freqHopRate;
 		switch (state) {
+			case MasterNetworkRadio:
 			case Syncing:
 			case OperatingNetwork:
 				freqHopRate = HOP_RATE;
+				break;
 			case SeekingRendezvous:
 				freqHopRate = (long) Math.ceil(SEARCH_SPEED * HOP_RATE);
+				break;
 			default:
 				freqHopRate = HOP_RATE;
 		}
@@ -192,6 +268,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		long currentTime = getCurrentMillis();
 		if (currentTime - lastHopTime < freqHopRate) {
 			try {
+				log.info("Sleeping for " + (currentTime - lastHopTime));
 				Thread.sleep(freqHopRate - (currentTime - lastHopTime));
 			} catch (InterruptedException e) {
 				e.printStackTrace();

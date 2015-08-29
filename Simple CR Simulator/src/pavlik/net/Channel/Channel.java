@@ -1,13 +1,17 @@
 package pavlik.net.Channel;
 
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
 public class Channel implements Comparable<Channel> {
-	private static final Logger	log	= Logger.getLogger(Channel.class.getName());
-	int							id;
-	Set<ChannelListener>		listeners;
+	private static final Logger log = Logger.getLogger(Channel.class.getName());
+
+	final int			id;
+	public final double	noise	= new Random().nextDouble();
+
+	Set<ChannelListener> listeners;
 
 	/**
 	 * Set the constructor protected in order to force use of the Spectrum.buildChannels factory
@@ -26,15 +30,15 @@ public class Channel implements Comparable<Channel> {
 		return super.equals(obj);
 	}
 
-	public synchronized boolean addListener(ChannelListener listener) {
+	public boolean addListener(ChannelListener listener) {
 		return listeners.add(listener);
 	}
 
-	public synchronized boolean removeListener(ChannelListener listener) {
+	public boolean removeListener(ChannelListener listener) {
 		return listeners.remove(listener);
 	}
 
-	public synchronized void broadcastMessage(String string) {
+	public void broadcastMessage(String string) {
 		for (ChannelListener listener : listeners) {
 			log.fine("Broadcasting string: " + string + " on channel: " + id);
 			listener.receiveBroadcast(this, string);

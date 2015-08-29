@@ -7,7 +7,7 @@ public interface RadioProtocol extends ChannelListener {
 
 	public Channel nextChannel();
 	
-	public void pauseForHop();
+//	public void pauseForHop();
 	
 	public void receiveBroadcast(Channel channel, String message);
 

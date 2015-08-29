@@ -29,35 +29,45 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 
 	private static final Logger log = Logger.getLogger(FrequencyHopping.class.getName());
 
-	private static boolean firstRadioSetup = false;
+	public static boolean firstRadioSetup = false;
 
 	// Seed will be generated the first time this class is instantiated
 	private static byte[]	SEED		= null;
 	private static int		SEED_SIZE	= 512;
 
-	// The radios clock will be set to between the current time and the current time + MAX_TIME_OFFSET
-	private static long	MAX_TIME_OFFSET	= 4000;
-	private long		timeOffset;
-	private long		startTime;
+	// The radios clock will be set to between the current time and the current time +
+	// MAX_ROUND_OFFSET
+	private static int	MAX_ROUND_OFFSET	= 100;
+	// private long timeOffset;
+	// private long startTime;
+	private int			currentHopRound;
+	private int			currentShortRound	= 0;
 
 	// Modifier applied to base HOP_RATE in order to search for the right network during the Seeking
 	// phase
-	private static final double SEARCH_SPEED = 0.5;
+	private static double SEARCH_SPEED = 4;
 
 	// Uncomment to override and slow down to 1 second hops for debug
-	protected static long HOP_RATE = 1000;
+	// protected static long HOP_RATE = 1000;
 
 	// Number of channels in the sliding window
-	private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1);
+	// private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1);
+	private static int WINDOW_CHANNEL_COUNT = (int) MAX_ROUND_OFFSET;
 
 	// A sliding time window of indices into the channels[]
 	int[] slidingWindow = new int[WINDOW_CHANNEL_COUNT];
 
 	// Index to the sliding window of the current estimated channel
-	int currentSlidingIndex = 0;
+	int currentSlidingIndex;
 
 	// The index to the last update of the sliding window
 	int lastWindowUpdate;
+
+	RoundType currentRound = RoundType.bothRound;
+
+	enum RoundType {
+		shortRound, hopRound, bothRound;
+	}
 
 	private enum State {
 		MasterNetworkRadio, SeekingRendezvous, OperatingNetwork, Syncing;
@@ -95,14 +105,16 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		secureRand = new java.security.SecureRandom(SEED);
 
 		// Setup a random time offset that is plus or minus the MAX_TIME_OFFSET
-		timeOffset = (Math.abs(new Random().nextLong()) % MAX_TIME_OFFSET);
-
-		startTime = getCurrentMillis();
+		// timeOffset = (Math.abs(new Random().nextLong()) % MAX_TIME_OFFSET);
+		// startTime = getCurrentMillis();
+		currentHopRound = Math.abs(new Random().nextInt()) % MAX_ROUND_OFFSET;
+		currentSlidingIndex = currentHopRound;
 
 		// Build ranking table with Channels array
 		this.channels = channels;
 		Arrays.sort(channels, new Comparator<Channel>() {
 			public int compare(Channel o1, Channel o2) {
+				// return Double.compare(o1.noise, o2.noise);
 				return o1.compareTo(o2);
 			};
 		});
@@ -120,13 +132,51 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		}
 	}
 
+	private void incrementRound() {
+		int previousShortRound = currentShortRound;
+		int previousHopRound = currentHopRound;
+		if (SEARCH_SPEED >= 1) {
+			currentShortRound += 1;
+			if (currentShortRound % SEARCH_SPEED == 0) {
+				currentHopRound += 1;
+			}
+		} else /* SEARCH_SPEED < 1 */ {
+			currentHopRound += 1;
+			if (currentHopRound % (1 / SEARCH_SPEED) == 0) {
+				currentShortRound += 1;
+			}
+		}
+		if (currentShortRound == previousShortRound) {
+			currentRound = RoundType.hopRound;
+		} else if (currentHopRound == previousHopRound) {
+			currentRound = RoundType.shortRound;
+		} else {
+			currentRound = RoundType.bothRound;
+		}
+	}
+
 	@Override
 	public Channel nextChannel() {
+		incrementRound();
 		updateSlidingWindow();
-
-		int tmpIndex = currentSlidingIndex;
-		currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
-		return channels[slidingWindow[tmpIndex]];
+		switch (state) {
+			case MasterNetworkRadio:
+			case OperatingNetwork:
+			case Syncing:
+				if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
+					currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
+				}
+				break;
+			case SeekingRendezvous:
+				if (currentRound == RoundType.bothRound || currentRound == RoundType.shortRound) {
+					currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
+				}
+				break;
+			default:
+				throw new RuntimeException("Undefined state: " + state);
+		}
+		log.info("Sliding index = " + currentSlidingIndex);
+		return channels[slidingWindow[currentSlidingIndex]];
 	}
 
 	private int generateSecureRandomInt() {
@@ -144,18 +194,16 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	}
 
 	private void updateSlidingWindow() {
-		//TODO: this the offset is being subtracted out, making radios start synchronized
-		long currentNetworkRound = (getCurrentMillis() - startTime) / HOP_RATE;
-		while (lastWindowUpdate <= currentNetworkRound) {
+		while (lastWindowUpdate <= currentHopRound) {
 			slidingWindow[lastWindowUpdate % WINDOW_CHANNEL_COUNT] = generateSecureRandomInt()
 					% channels.length;
 			lastWindowUpdate++;
 		}
 	}
 
-	private long getCurrentMillis() {
-		return System.currentTimeMillis() + timeOffset;
-	}
+	// private long getCurrentMillis() {
+	// return System.currentTimeMillis() + timeOffset;
+	// }
 
 	@Override
 	public void receiveBroadcast(Channel currentChannel, String message) {
@@ -176,22 +224,21 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 				if (message.contains("0HELLO")) {
 					log.info("Radio " + id + " switching SYNCING state");
 					state = State.Syncing;
-					lastHopTime = getCurrentMillis() + 1;
 					state.currentHop = 0;
 					state.hitCount = 0;
-					// currentChannel.broadcastMessage(id + " 1" + "ACKHELLO on channel: "
-					// + currentChannel.toString());
 				}
 				break;
 
 			case Syncing:
-				if (message.contains("0HELLO")) {
-					log.info("Syncing success, up to " + state.hitCount);
-					state.hitCount += 1;
-				}
-				if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
-					log.info("Radio " + id + " switching DONE state");
-					state = State.OperatingNetwork;
+				if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
+					if (message.contains("0HELLO")) {
+						log.info("Syncing success, up to " + state.hitCount);
+						state.hitCount += 1;
+					}
+					if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
+						log.info("Radio " + id + " switching DONE state");
+						state = State.OperatingNetwork;
+					}
 				}
 				break;
 
@@ -203,7 +250,6 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	@Override
 	public void broadcastSync(Channel currentChannel) {
 		switch (state) {
-
 			case MasterNetworkRadio:
 				currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: " + currentChannel
 						.toString());
@@ -217,10 +263,12 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 				break;
 
 			case Syncing:
-				state.currentHop += 1;
-				if (state.currentHop > State.MAX_SYNC_HOPS) {
-					log.info("Radio " + id + " switching back to SEEKING state");
-					state = State.SeekingRendezvous;
+				if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
+					state.currentHop += 1;
+					if (state.currentHop > State.MAX_SYNC_HOPS) {
+						log.info("Radio " + id + " switching back to SEEKING state");
+						state = State.SeekingRendezvous;
+					}
 				}
 				break;
 
@@ -245,35 +293,35 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		}
 	}
 
-	private long getStateHopRate() {
-		long freqHopRate;
-		switch (state) {
-			case MasterNetworkRadio:
-			case Syncing:
-			case OperatingNetwork:
-				freqHopRate = HOP_RATE;
-				break;
-			case SeekingRendezvous:
-				freqHopRate = (long) Math.ceil(SEARCH_SPEED * HOP_RATE);
-				break;
-			default:
-				freqHopRate = HOP_RATE;
-		}
-		return freqHopRate;
-	}
+	// private long getStateHopRate() {
+	// long freqHopRate;
+	// switch (state) {
+	// case MasterNetworkRadio:
+	// case Syncing:
+	// case OperatingNetwork:
+	// freqHopRate = HOP_RATE;
+	// break;
+	// case SeekingRendezvous:
+	// freqHopRate = (long) Math.ceil(SEARCH_SPEED * HOP_RATE);
+	// break;
+	// default:
+	// freqHopRate = HOP_RATE;
+	// }
+	// return freqHopRate;
+	// }
 
-	@Override
-	public void pauseForHop() {
-		long freqHopRate = getStateHopRate();
-		long currentTime = getCurrentMillis();
-		if (currentTime - lastHopTime < freqHopRate) {
-			try {
-				log.info("Sleeping for " + (currentTime - lastHopTime));
-				Thread.sleep(freqHopRate - (currentTime - lastHopTime));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		lastHopTime = currentTime;
-	}
+	// @Override
+	// public void pauseForHop() {
+	// long freqHopRate = getStateHopRate();
+	// long currentTime = getCurrentMillis();
+	// if (currentTime - lastHopTime < freqHopRate) {
+	// try {
+	// log.info("Sleeping for " + (currentTime - lastHopTime));
+	// Thread.sleep(freqHopRate - (currentTime - lastHopTime));
+	// } catch (InterruptedException e) {
+	// e.printStackTrace();
+	// }
+	// }
+	// lastHopTime = currentTime;
+	// }
 }

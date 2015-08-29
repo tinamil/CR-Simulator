@@ -35,8 +35,7 @@ public class ConfigurationLoader {
 			.getName());
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
-	public static Simulation loadConfiguration(File configFile, String channelsOverride,
-			String timingOverride) {
+	public static Simulation loadConfiguration(File configFile, String channelsOverride) {
 		log.fine("Loading configuration");
 		File config;
 		if (configFile == null) config = new File(defaultConfig);
@@ -45,9 +44,9 @@ public class ConfigurationLoader {
 		if (document == null) return null;
 
 		Simulation simulation = loadNetworkConfiguration(document);
-		if (timingOverride != null) {
-			simulation.setTiming(timingOverride);
-		}
+//		if (timingOverride != null) {
+//			simulation.setTiming(timingOverride);
+//		}
 
 		loadRadiosConfiguration(document, simulation, channelsOverride);
 		return simulation;
@@ -75,8 +74,6 @@ public class ConfigurationLoader {
 		Node root = networkList.item(0);
 		if (root.getNodeType() == Node.ELEMENT_NODE) {
 			Element rootElement = (Element) root;
-			String timingString = rootElement.getAttribute("timing");
-			sim.setTiming(timingString);
 			String rendezvousString = rootElement.getAttribute("algorithm");
 			sim.setRendezvousString(rendezvousString);
 		} else {

@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 import pavlik.net.Channel.Channel;
 
-public class Radio extends Thread {
+public class Radio {
 
 	private static final Logger log = Logger.getLogger(Radio.class.getName());
 
@@ -19,25 +19,22 @@ public class Radio extends Thread {
 		this.algorithm = algorithm;
 	}
 
-	@Override
-	public void run() {
-		while (running) {
-			nextStep();
-		}
-	}
-
 	public void stopSimulation() {
 		running = false;
 	}
 
-	public void nextStep() {
-		if (running) {
-			nextChannel();
-			algorithm.broadcastSync(currentChannel);
-			algorithm.pauseForHop();
-		}
-	}
+//	public void nextStep() {
+//		if (running) {
+//			nextChannel();
+//			algorithm.broadcastSync(currentChannel);
+//			algorithm.pauseForHop();
+//		}
+//	}
 
+	public void sync(){
+		algorithm.broadcastSync(currentChannel);
+	}
+	
 	public void nextChannel() {
 		if (currentChannel != null) {
 			currentChannel.removeListener(algorithm);

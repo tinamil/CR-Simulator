@@ -9,10 +9,8 @@ import pavlik.net.radio.Radio;
 
 public class Simulation extends Thread {
 	private static final Logger	log		= Logger.getLogger(Simulation.class.getName());
-	public static final int		SYNC	= 0;
-	public static final int		ASYNC	= 1;
 
-	public int					timingType;
+	// public int timingType;
 	private Set<Radio>			allRadios			= new HashSet<>();
 	private volatile boolean	running				= true;
 	private Set<SimListener>	simList				= new HashSet<>();
@@ -29,26 +27,22 @@ public class Simulation extends Thread {
 	public void run() {
 		log.info("Begin simulation");
 		long start = System.nanoTime();
-		if (timingType == ASYNC) {
-			for (Radio radio : allRadios) {
-				radio.start();
-			}
-		}
 		while (running) {
+			rounds += 1;
+			for (Radio radio : allRadios) {
+				radio.nextChannel();
+			}
+			for (Radio radio : allRadios) {
+				radio.sync();
+			}
+			running = false;
+			for (Radio radio : allRadios) {
+				if (!radio.isSyncComplete()) running = true;
+			} 
 			try {
-				if (timingType == ASYNC) Thread.sleep(100);
-				boolean done = true;
-				rounds += 1;
-				for (Radio radio : allRadios) {
-					if (timingType == SYNC) {
-						radio.nextStep();
-					}
-					if (!radio.isSyncComplete()) done = false;
-				}
-				running = !done;
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-				log.severe("Exception: " + e.toString());
 			}
 		}
 		clock = System.nanoTime() - start;
@@ -82,9 +76,9 @@ public class Simulation extends Thread {
 		public void complete(long timeSpent);
 	}
 
-	public void setTiming(int model) {
-		this.timingType = model;
-	}
+	// public void setTiming(int model) {
+	// this.timingType = model;
+	// }
 
 	public String getRendezvousString() {
 		return rendezvousString;
@@ -104,21 +98,5 @@ public class Simulation extends Thread {
 
 	public void setRendezvousString(String rendezvousString) {
 		this.rendezvousString = rendezvousString;
-	}
-
-	public void setTiming(String timingString) {
-		switch (timingString) {
-			case "asynchronous":
-			case "async":
-				setTiming(Simulation.ASYNC);
-				break;
-			case "slotted":
-			case "sync":
-			case "synchronous":
-				setTiming(Simulation.SYNC);
-				break;
-			default:
-				throw new RuntimeException("Invalid timing type: " + timingString);
-		}
 	}
 }

@@ -17,11 +17,11 @@ import pavlik.net.radio.protocol.RadioProtocol;
 public abstract class RendezvousAlgorithm implements RadioProtocol {
 
 	private static final Logger	log			= Logger.getLogger(RendezvousAlgorithm.class.getName());
-	protected long				lastHopTime	= System.currentTimeMillis();
-	/**
-	 * 9 ms / 111 hz by default, can be overriden by a specific implementation
-	 */
-	protected static long		HOP_RATE	= 9;
+	// protected long lastHopTime = System.currentTimeMillis();
+	// /**
+	// * 9 ms / 111 hz by default, can be overriden by a specific implementation
+	// */
+	// protected static long HOP_RATE = 9;
 	boolean						synced		= false;
 	protected String			id;
 
@@ -86,15 +86,15 @@ public abstract class RendezvousAlgorithm implements RadioProtocol {
 		return synced;
 	}
 
-	public void pauseForHop() {
-		long currentTime = System.currentTimeMillis();
-		while (currentTime - lastHopTime < HOP_RATE) {
-			try {
-				Thread.sleep(currentTime - lastHopTime);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		lastHopTime = currentTime;
-	}
+	// public void pauseForHop() {
+	// long currentTime = System.currentTimeMillis();
+	// while (currentTime - lastHopTime < HOP_RATE) {
+	// try {
+	// Thread.sleep(currentTime - lastHopTime);
+	// } catch (InterruptedException e) {
+	// e.printStackTrace();
+	// }
+	// }
+	// lastHopTime = currentTime;
+	// }
 }

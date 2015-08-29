@@ -45,14 +45,14 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 
 	// Modifier applied to base HOP_RATE in order to search for the right network during the Seeking
 	// phase
-	private static double SEARCH_SPEED = 4;
+	public static double SEARCH_SPEED = 2;
 
 	// Uncomment to override and slow down to 1 second hops for debug
 	// protected static long HOP_RATE = 1000;
 
 	// Number of channels in the sliding window
 	// private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1);
-	private static int WINDOW_CHANNEL_COUNT = (int) MAX_ROUND_OFFSET;
+	private static int WINDOW_CHANNEL_COUNT = (2*MAX_ROUND_OFFSET) + 1;
 
 	// A sliding time window of indices into the channels[]
 	int[] slidingWindow = new int[WINDOW_CHANNEL_COUNT];
@@ -102,7 +102,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		}
 
 		// Initialize radios with a cryptographically secure PRNG and shared SEED
-		secureRand = new java.security.SecureRandom(SEED);
+		secureRand = new java.security.SecureRandom(FrequencyHopping.SEED);
 
 		// Setup a random time offset that is plus or minus the MAX_TIME_OFFSET
 		// timeOffset = (Math.abs(new Random().nextLong()) % MAX_TIME_OFFSET);
@@ -175,7 +175,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 			default:
 				throw new RuntimeException("Undefined state: " + state);
 		}
-		log.info("Sliding index = " + currentSlidingIndex);
+		//log.info("Sliding index = " + currentSlidingIndex);
 		return channels[slidingWindow[currentSlidingIndex]];
 	}
 
@@ -199,6 +199,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 					% channels.length;
 			lastWindowUpdate++;
 		}
+		//log.info("Sliding Window: " + Arrays.toString(slidingWindow));
 	}
 
 	// private long getCurrentMillis() {

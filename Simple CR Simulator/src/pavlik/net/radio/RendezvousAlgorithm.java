@@ -32,7 +32,7 @@ public abstract class RendezvousAlgorithm implements RadioProtocol {
 	}
 
 	public static RendezvousAlgorithm getAlgorithm(String rendezvousString, String id,
-			Channel[] channels) {
+			Channel[] channels, boolean firstRadio) {
 		switch (rendezvousString) {
 			case "random":
 				return new RandomAlgorithm(id, channels);
@@ -53,7 +53,7 @@ public abstract class RendezvousAlgorithm implements RadioProtocol {
 			case "ssb":
 				return new ShortSequenceBased(id, channels);
 			case "fh":
-				return new FrequencyHopping(id, channels);
+				return new FrequencyHopping(id, channels, firstRadio ? FrequencyHopping.State.MasterNetworkRadio : FrequencyHopping.State.SeekingRendezvous);
 			default:
 				return null;
 		}

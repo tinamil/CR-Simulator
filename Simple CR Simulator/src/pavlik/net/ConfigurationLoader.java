@@ -32,7 +32,7 @@ import pavlik.net.radio.RendezvousAlgorithm;
  */
 public class ConfigurationLoader {
 	private static final Logger	log				= Logger.getLogger(ConfigurationLoader.class
-			.getName());
+														.getName());
 	public static String		defaultConfig	= "DefaultConfiguration.xml";
 
 	public static Simulation loadConfiguration(File configFile, String channelsOverride) {
@@ -44,9 +44,9 @@ public class ConfigurationLoader {
 		if (document == null) return null;
 
 		Simulation simulation = loadNetworkConfiguration(document);
-//		if (timingOverride != null) {
-//			simulation.setTiming(timingOverride);
-//		}
+		// if (timingOverride != null) {
+		// simulation.setTiming(timingOverride);
+		// }
 
 		loadRadiosConfiguration(document, simulation, channelsOverride);
 		return simulation;
@@ -87,7 +87,7 @@ public class ConfigurationLoader {
 		log.fine("Loading radios");
 		Set<Radio> radioSet = new HashSet<>();
 		NodeList nodeList = doc.getElementsByTagName("radio");
-
+		boolean first = true;
 		for (int nodeIndex = 0; nodeIndex < nodeList.getLength(); nodeIndex++) {
 			Node node = nodeList.item(nodeIndex);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -97,7 +97,8 @@ public class ConfigurationLoader {
 				if (channelOverride != null) channelString = channelOverride;
 				Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
 				RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(simulation
-						.getRendezvousString(), name, channels);
+						.getRendezvousString(), name, channels, first);
+				first = false;
 				Radio radio = new Radio(name, algorithm);
 				radioSet.add(radio);
 			} else {

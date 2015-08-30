@@ -11,11 +11,10 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import pavlik.net.Simulation.SimListener;
-import pavlik.net.radio.algorithms.asynchronous.FrequencyHopping;
 
 public class TextInterface {
 	private static final Logger	log				= Logger.getLogger(TextInterface.class.getName());
-	private static int			totalRunCount	= 100;
+	private static int			totalRunCount	= 10000;
 
 	private static final String	channels		= null;
 //	private static final String	timing			= null;
@@ -55,7 +54,6 @@ public class TextInterface {
 	}
 
 	private static void executeSim(File configFile, int runs) {
-		FrequencyHopping.firstRadioSetup = false;
 		Simulation sim = ConfigurationLoader.loadConfiguration(configFile, channels);
 		sim.addListener(new TextInterface().new TextListener(sim, configFile, runs));
 		sim.start();

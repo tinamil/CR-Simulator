@@ -15,11 +15,11 @@ import pavlik.net.radio.RendezvousAlgorithm;
  * 
  * <pre>
  * {@code
-  while(isSynced() == false){
-	 nextChannel();
-	 broadcastSync();
-	 pauseForHop();
-  }
+ *   while(isSynced() == false){
+ * 	 nextChannel();
+ * 	 broadcastSync();
+ * 	 pauseForHop();
+ *   }
  * </pre>
  * 
  * @author John
@@ -27,71 +27,70 @@ import pavlik.net.radio.RendezvousAlgorithm;
  */
 public class FrequencyHopping extends RendezvousAlgorithm {
 
-	private static final Logger log = Logger.getLogger(FrequencyHopping.class.getName());
-
-	public static boolean firstRadioSetup = false;
+	private static final Logger	log						= Logger.getLogger(FrequencyHopping.class
+																.getName());
 
 	// Seed will be generated the first time this class is instantiated
-	private static byte[]	SEED		= null;
-	private static int		SEED_SIZE	= 512;
+	private static byte[]		SEED					= null;
+	private static int			SEED_SIZE				= 512;
 
 	// The radios clock will be set to between the current time and the current time +
 	// MAX_ROUND_OFFSET
-	private static int	MAX_ROUND_OFFSET	= 100;
+	private static int			MAX_ROUND_OFFSET		= 5;
 	// private long timeOffset;
 	// private long startTime;
-	private int			currentHopRound;
-	private int			currentShortRound	= 0;
+	private int					currentHopRound;
+	private int					currentShortRound		= 0;
 
 	// Modifier applied to base HOP_RATE in order to search for the right network during the Seeking
 	// phase
-	public static double SEARCH_SPEED = 2;
+	public static double		SEARCH_SPEED			= 2;
 
 	// Uncomment to override and slow down to 1 second hops for debug
 	// protected static long HOP_RATE = 1000;
 
 	// Number of channels in the sliding window
 	// private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1);
-	private static int WINDOW_CHANNEL_COUNT = (2*MAX_ROUND_OFFSET) + 1;
+	private static int			WINDOW_CHANNEL_COUNT	= (2 * MAX_ROUND_OFFSET) + 1;
 
 	// A sliding time window of indices into the channels[]
-	int[] slidingWindow = new int[WINDOW_CHANNEL_COUNT];
+	int[]						slidingWindow			= new int[WINDOW_CHANNEL_COUNT];
 
 	// Index to the sliding window of the current estimated channel
-	int currentSlidingIndex;
+	int							currentSlidingIndex;
 
 	// The index to the last update of the sliding window
-	int lastWindowUpdate;
+	int							lastWindowUpdate;
 
-	RoundType currentRound = RoundType.bothRound;
+	RoundType					currentRound			= RoundType.bothRound;
 
 	enum RoundType {
 		shortRound, hopRound, bothRound;
 	}
 
-	private enum State {
+	public enum State {
 		MasterNetworkRadio, SeekingRendezvous, OperatingNetwork, Syncing;
 
 		// The count of how many hops have been made in the current sync attempt
-		private long currentHop = 0;
+		private long				currentHop			= 0;
 
 		// Number of successful hop attempts
-		private long hitCount = 0;
+		private long				hitCount			= 0;
 
 		// Number of required hops to be correct in order to synchronize
-		private static final long REQUIRED_SYNC_HOPS = 10;
+		private static final long	REQUIRED_SYNC_HOPS	= 10;
 
 		// Maximum number of hop attempts to synchronize before aborting
-		private static final long MAX_SYNC_HOPS = 20;
+		private static final long	MAX_SYNC_HOPS		= 20;
 
 	}
 
-	State		state;
-	Channel[]	channels;
+	State						state;
+	Channel[]					channels;
 
-	java.security.SecureRandom secureRand;
+	java.security.SecureRandom	secureRand;
 
-	public FrequencyHopping(String id, Channel[] channels) {
+	public FrequencyHopping(String id, Channel[] channels, State startingState) {
 		super(id);
 		// If this is the first radio in the network, generate a shared seed for ALL radios
 		if (FrequencyHopping.SEED == null) try {
@@ -109,7 +108,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		// startTime = getCurrentMillis();
 		currentHopRound = Math.abs(new Random().nextInt()) % MAX_ROUND_OFFSET;
 		currentSlidingIndex = currentHopRound;
-
+		log.info("Starting Hop/Sliding Index: " + currentHopRound);
 		// Build ranking table with Channels array
 		this.channels = channels;
 		Arrays.sort(channels, new Comparator<Channel>() {
@@ -122,14 +121,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		// Pre-load the sliding window with valid channels
 		initializeSlidingWindow();
 
-		// Default to a Seeking Rendezvous state
-		if (!firstRadioSetup) {
-			firstRadioSetup = true;
-			this.state = State.MasterNetworkRadio;
-			log.info("Radio " + id + " is the master network radio");
-		} else {
-			this.state = State.SeekingRendezvous;
-		}
+		this.state = startingState;
 	}
 
 	private void incrementRound() {
@@ -140,7 +132,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 			if (currentShortRound % SEARCH_SPEED == 0) {
 				currentHopRound += 1;
 			}
-		} else /* SEARCH_SPEED < 1 */ {
+		} else /* SEARCH_SPEED < 1 */{
 			currentHopRound += 1;
 			if (currentHopRound % (1 / SEARCH_SPEED) == 0) {
 				currentShortRound += 1;
@@ -175,7 +167,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 			default:
 				throw new RuntimeException("Undefined state: " + state);
 		}
-		//log.info("Sliding index = " + currentSlidingIndex);
+		log.info("Sliding index = " + currentSlidingIndex);
 		return channels[slidingWindow[currentSlidingIndex]];
 	}
 
@@ -199,7 +191,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 					% channels.length;
 			lastWindowUpdate++;
 		}
-		//log.info("Sliding Window: " + Arrays.toString(slidingWindow));
+		log.info("Sliding Window: " + Arrays.toString(slidingWindow));
 	}
 
 	// private long getCurrentMillis() {
@@ -224,6 +216,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 			case SeekingRendezvous:
 				if (message.contains("0HELLO")) {
 					log.info("Radio " + id + " switching SYNCING state");
+					currentHopRound = lastWindowUpdate;
 					state = State.Syncing;
 					state.currentHop = 0;
 					state.hitCount = 0;
@@ -252,8 +245,8 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	public void broadcastSync(Channel currentChannel) {
 		switch (state) {
 			case MasterNetworkRadio:
-				currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: " + currentChannel
-						.toString());
+				currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: "
+						+ currentChannel.toString());
 				break;
 
 			case OperatingNetwork:

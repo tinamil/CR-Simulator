@@ -1,0 +1,41 @@
+---
+title: "Multihop Rendezvous"
+author: "John Pavlik"
+date: "Monday, August 31, 2015"
+output: beamer_presentation
+---
+```{r, echo=FALSE}
+library(ggplot2)
+library(xlsx)
+drseq = read.xlsx("C:/Users/John/git/CR-Simulator/Simple CR Simulator/Aggregated.xlsx", sheetName="DRSEQ")
+ejs = read.xlsx("C:/Users/John/git/CR-Simulator/Simple CR Simulator/Aggregated.xlsx", sheetName="EJS")
+data = data.frame(drseq, ejs)
+```
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+
+## Slide with Plot
+
+```{r, echo=FALSE}
+
+longdrseq = reshape(drseq, 
+        varying=c("X10","X20","X30","X40","X50","X60","X70","X80","X90","X100","X250","X500","X750","X1000"),
+        v.names="Time",
+        timevar="Channels",
+        times=c("X10","X20","X30","X40","X50","X60","X70","X80","X90","X100","X250","X500","X750","X1000"),
+        direction="long")
+longdrseq1.100=subset(longdrseq, longdrseq$Channels!="X100" & longdrseq$Channels!="X250" & longdrseq$Channels !="X500" & longdrseq$Channels != "X750" & longdrseq$Channels != "X1000")
+qplot(data=longdrseq1.100, x=Channels,y=Time, geom="line") 
+help(reshape)
+```
+

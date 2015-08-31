@@ -18,7 +18,7 @@ public class TextInterface {
 
 	private static final String	channels		= null;
 //	private static final String	timing			= null;
-	private static final String	configDirectory	= "config";
+	private static final String	configDirectory	= "config/async";
 
 	public static void main(String[] args) throws IOException {
 		log.fine("Begin Main");

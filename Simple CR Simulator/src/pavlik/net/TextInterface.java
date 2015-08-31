@@ -14,11 +14,11 @@ import pavlik.net.Simulation.SimListener;
 
 public class TextInterface {
 	private static final Logger	log				= Logger.getLogger(TextInterface.class.getName());
-	private static int			totalRunCount	= 10000;
+	private static int			totalRunCount	= 5000;
 
 	private static final String	channels		= null;
 //	private static final String	timing			= null;
-	private static final String	configDirectory	= "config/async";
+	private static final String	configDirectory	= "config/async/1000";
 
 	public static void main(String[] args) throws IOException {
 		log.fine("Begin Main");
@@ -29,14 +29,18 @@ public class TextInterface {
 		}
 	}
 
-	private static File[] loadConfigFiles(File directory) {
+	public static File[] loadConfigFiles(File directory) {
+		return loadConfigFiles(directory, ".xml");
+	}
+	
+	public static File[] loadConfigFiles(File directory, String acceptString) {
 		if (!directory.isDirectory()) {
 			return new File[] { directory };
 		}
 		File[] configFiles = directory.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {
-				return (!pathname.isDirectory() && pathname.getName().endsWith(".xml"));
+				return (!pathname.isDirectory() && pathname.getName().endsWith(acceptString));
 			}
 		});
 		List<File> allConfigFiles = new ArrayList<>(Arrays.asList(configFiles));
@@ -47,7 +51,7 @@ public class TextInterface {
 			}
 		});
 		for (File subdir : subFolders) {
-			File[] subConfigs = loadConfigFiles(subdir);
+			File[] subConfigs = loadConfigFiles(subdir, acceptString);
 			allConfigFiles.addAll(Arrays.asList(subConfigs));
 		}
 		return allConfigFiles.toArray(new File[0]);

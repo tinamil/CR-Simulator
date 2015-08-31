@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <network timing="sync" algorithm="drseq">
-	<radio name="1" channels="1-1000" />
-	<radio name="2" channels="501-1500" />
+	<radio name="Master" channels="1-1000" />
+	<radio name="Joiner" channels="6-1005" />
 </network>

@@ -6,12 +6,12 @@ import pavlik.net.Channel.Channel;
 
 public class Radio {
 
-	private static final Logger log = Logger.getLogger(Radio.class.getName());
+	private static final Logger	log		= Logger.getLogger(Radio.class.getName());
 
-	String				id;
-	volatile boolean	running	= true;
-	Channel				currentChannel;
-	RendezvousAlgorithm	algorithm;
+	String						id;
+	volatile boolean			running	= true;
+	Channel						currentChannel;
+	public RendezvousAlgorithm	algorithm;
 
 	public Radio(String name, RendezvousAlgorithm algorithm) {
 		log.info("Radio created: " + name);
@@ -23,18 +23,18 @@ public class Radio {
 		running = false;
 	}
 
-//	public void nextStep() {
-//		if (running) {
-//			nextChannel();
-//			algorithm.broadcastSync(currentChannel);
-//			algorithm.pauseForHop();
-//		}
-//	}
+	// public void nextStep() {
+	// if (running) {
+	// nextChannel();
+	// algorithm.broadcastSync(currentChannel);
+	// algorithm.pauseForHop();
+	// }
+	// }
 
-	public void sync(){
+	public void sync() {
 		algorithm.broadcastSync(currentChannel);
 	}
-	
+
 	public void nextChannel() {
 		if (currentChannel != null) {
 			currentChannel.removeListener(algorithm);
@@ -47,4 +47,5 @@ public class Radio {
 	public boolean isSyncComplete() {
 		return algorithm.isSynced();
 	}
+
 }

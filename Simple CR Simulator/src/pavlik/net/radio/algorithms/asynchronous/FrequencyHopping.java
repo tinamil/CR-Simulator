@@ -85,7 +85,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	}
 
 	State		state;
-	Channel[]	channels;
+	public Channel[]	channels;
 
 	java.security.SecureRandom secureRand;
 

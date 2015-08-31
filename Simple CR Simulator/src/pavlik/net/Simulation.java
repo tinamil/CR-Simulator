@@ -8,10 +8,10 @@ import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
 public class Simulation extends Thread {
-	private static final Logger	log		= Logger.getLogger(Simulation.class.getName());
+	private static final Logger	log					= Logger.getLogger(Simulation.class.getName());
 
 	// public int timingType;
-	private Set<Radio>			allRadios			= new HashSet<>();
+	public Set<Radio>			allRadios			= new HashSet<>();
 	private volatile boolean	running				= true;
 	private Set<SimListener>	simList				= new HashSet<>();
 	private String				rendezvousString	= "";
@@ -38,8 +38,8 @@ public class Simulation extends Thread {
 			running = false;
 			for (Radio radio : allRadios) {
 				if (!radio.isSyncComplete()) running = true;
-			} 
-			if(rounds > 100000){
+			}
+			if (rounds > 100000) {
 				running = false;
 			}
 		}

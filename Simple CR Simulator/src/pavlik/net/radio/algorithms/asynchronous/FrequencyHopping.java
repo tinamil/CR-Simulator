@@ -84,10 +84,11 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 
 	}
 
-	State		state;
+	State				state;
 	public Channel[]	channels;
 
 	java.security.SecureRandom secureRand;
+	int[] bias;
 
 	public FrequencyHopping(String id, Channel[] channels, State startingState) {
 		super(id);
@@ -116,7 +117,14 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 				// return o1.compareTo(o2);
 			};
 		});
-
+		int biasCount = (channels.length * (channels.length + 1)) / 2;
+		bias = new int[biasCount];
+		int index = 0;
+		for(int i = channels.length; i > 0; --i){
+			for(int j = 0; j < i; ++j){
+				bias[index++] = channels.length - i;
+			}
+		}
 		// Pre-load the sliding window with valid channels
 		initializeSlidingWindow();
 
@@ -175,6 +183,13 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 		secureRand.nextBytes(bytes);
 		int nextVal = Math.abs(ByteBuffer.wrap(bytes).getInt());
 		return nextVal;
+	}
+
+	private int generateSecureRandomInt(int[] bias) {
+		byte[] bytes = new byte[4];
+		secureRand.nextBytes(bytes);
+		int nextVal = Math.abs(ByteBuffer.wrap(bytes).getInt());
+		return bias[nextVal % bias.length];
 	}
 
 	private void initializeSlidingWindow() {

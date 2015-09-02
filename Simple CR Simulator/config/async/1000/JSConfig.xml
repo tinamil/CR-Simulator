@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<network timing="sync" algorithm="js">
-	<radio name="Master" channels="1-1000" />
-	<radio name="Joiner" channels="6-1005" />
-</network>

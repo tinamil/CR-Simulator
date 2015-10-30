@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 import pavlik.net.Channel.Channel;
 import pavlik.net.radio.algorithms.asynchronous.EnhancedJumpStay;
-import pavlik.net.radio.algorithms.asynchronous.FrequencyHopping;
+import pavlik.net.radio.algorithms.asynchronous.MultiHop;
 import pavlik.net.radio.algorithms.asynchronous.JumpStay;
 import pavlik.net.radio.algorithms.asynchronous.ModifiedModularClock;
 import pavlik.net.radio.algorithms.asynchronous.RandomAlgorithm;
@@ -53,7 +53,7 @@ public abstract class RendezvousAlgorithm implements RadioProtocol {
 			case "ssb":
 				return new ShortSequenceBased(id, channels);
 			case "fh":
-				return new FrequencyHopping(id, channels, firstRadio ? FrequencyHopping.State.MasterNetworkRadio : FrequencyHopping.State.SeekingRendezvous);
+				return new MultiHop(id, channels, firstRadio ? MultiHop.State.MasterNetworkRadio : MultiHop.State.SeekingRendezvous);
 			default:
 				return null;
 		}

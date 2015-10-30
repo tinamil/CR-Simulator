@@ -25,9 +25,9 @@ import pavlik.net.radio.RendezvousAlgorithm;
  * @author John
  *
  */
-public class FrequencyHopping extends RendezvousAlgorithm {
+public class MultiHop extends RendezvousAlgorithm {
 
-	private static final Logger		log						= Logger.getLogger(FrequencyHopping.class
+	private static final Logger		log						= Logger.getLogger(MultiHop.class
 																	.getName());
 
 	// Seed will be generated the first time this class is instantiated
@@ -35,7 +35,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	private static final int		SEED_SIZE				= 512;
 
 	// Whether to use a 1/X or uniform probability distribution
-	private static final boolean	USE_BIAS				= true;
+	private static final boolean	USE_BIAS				= false;
 
 	// The radios clock will be set to between the current time and the current time +
 	// MAX_ROUND_OFFSET
@@ -94,18 +94,18 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 	java.security.SecureRandom	secureRand;
 	int[]						bias;
 
-	public FrequencyHopping(String id, Channel[] channels, State startingState) {
+	public MultiHop(String id, Channel[] channels, State startingState) {
 		super(id);
 		// If this is the first radio in the network, generate a shared seed for ALL radios
-		if (FrequencyHopping.SEED == null) try {
-			FrequencyHopping.SEED = java.security.SecureRandom.getInstanceStrong().generateSeed(
+		if (MultiHop.SEED == null) try {
+			MultiHop.SEED = java.security.SecureRandom.getInstanceStrong().generateSeed(
 					SEED_SIZE);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 
 		// Initialize radios with a cryptographically secure PRNG and shared SEED
-		secureRand = new java.security.SecureRandom(FrequencyHopping.SEED);
+		secureRand = new java.security.SecureRandom(MultiHop.SEED);
 
 		// Setup a random time offset that is plus or minus the MAX_TIME_OFFSET
 		// timeOffset = (Math.abs(new Random().nextLong()) % MAX_TIME_OFFSET);
@@ -178,7 +178,9 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 			default:
 				throw new RuntimeException("Undefined state: " + state);
 		}
-		log.info("Sliding index = " + currentSlidingIndex);
+		log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
+		log.info(id + " Channels = " + Arrays.toString(channels));
+		log.info(id + " Sliding index = " + currentSlidingIndex);
 		return channels[slidingWindow[currentSlidingIndex]];
 	}
 
@@ -206,7 +208,6 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 					% channels.length;
 			lastWindowUpdate++;
 		}
-		log.info("Sliding Window: " + Arrays.toString(slidingWindow));
 	}
 
 	@Override
@@ -227,7 +228,7 @@ public class FrequencyHopping extends RendezvousAlgorithm {
 			case SeekingRendezvous:
 				if (message.contains("0HELLO")) {
 					log.info("Radio " + id + " switching SYNCING state");
-					currentHopRound = lastWindowUpdate;
+					//currentHopRound = lastWindowUpdate;
 					state = State.Syncing;
 					state.currentHop = 0;
 					state.hitCount = 0;

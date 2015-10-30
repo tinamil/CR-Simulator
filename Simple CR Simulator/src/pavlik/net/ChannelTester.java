@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 import pavlik.net.Channel.Channel;
 import pavlik.net.radio.Radio;
-import pavlik.net.radio.algorithms.asynchronous.FrequencyHopping;
+import pavlik.net.radio.algorithms.asynchronous.MultiHop;
 
 public class ChannelTester {
 	private static final Logger	log			= Logger.getLogger(ChannelTester.class.getName());
@@ -31,9 +31,9 @@ public class ChannelTester {
 				Radio radio1 = radioIt.next();
 				Radio radio2 = radioIt.next();
 				int count = 0;
-				Channel[] channel1 = ((FrequencyHopping) radio1.algorithm).channels;
+				Channel[] channel1 = ((MultiHop) radio1.algorithm).channels;
 				for (int i = 0; i < channel1.length; ++i) {
-					if (channel1[i] == ((FrequencyHopping) radio2.algorithm).channels[i]) {
+					if (channel1[i] == ((MultiHop) radio2.algorithm).channels[i]) {
 						count += 1;
 					}
 				}

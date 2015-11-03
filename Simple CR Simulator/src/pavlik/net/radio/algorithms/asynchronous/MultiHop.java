@@ -27,45 +27,47 @@ import pavlik.net.radio.RendezvousAlgorithm;
  */
 public class MultiHop extends RendezvousAlgorithm {
 
-	private static final Logger		log						= Logger.getLogger(MultiHop.class
-																	.getName());
+	private static final Logger log = Logger.getLogger(MultiHop.class.getName());
 
 	// Seed will be generated the first time this class is instantiated
-	private static byte[]			SEED					= null;
-	private static final int		SEED_SIZE				= 512;
+	private static byte[] SEED = null;
+	private static final int SEED_SIZE = 512;
 
 	// Whether to use a 1/X or uniform probability distribution
-	private static final boolean	USE_BIAS				= false;
+	private static final boolean USE_BIAS = false;
 
-	// The radios clock will be set to between the current time and the current time +
+	// The radios clock will be set to between the current time and the current
+	// time +
 	// MAX_ROUND_OFFSET
-	private static int				MAX_ROUND_OFFSET		= 5;
+	private static int MAX_ROUND_OFFSET = 400;
 	// private long timeOffset;
 	// private long startTime;
-	private int						currentHopRound;
-	private int						currentShortRound		= 0;
+	private int currentHopRound;
+	private int currentShortRound = 0;
 
-	// Modifier applied to base HOP_RATE in order to search for the right network during the Seeking
+	// Modifier applied to base HOP_RATE in order to search for the right
+	// network during the Seeking
 	// phase
-	public static double			SEARCH_SPEED			= 2;
+	public static double SEARCH_SPEED = 1;
 
 	// Uncomment to override and slow down to 1 second hops for debug
 	// protected static long HOP_RATE = 1000;
 
 	// Number of channels in the sliding window
-	// private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET / HOP_RATE) + 1);
-	private static int				WINDOW_CHANNEL_COUNT	= (2 * MAX_ROUND_OFFSET) + 1;
+	// private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET /
+	// HOP_RATE) + 1);
+	private static int WINDOW_CHANNEL_COUNT = (2 * MAX_ROUND_OFFSET) + 1;
 
 	// A sliding time window of indices into the channels[]
-	int[]							slidingWindow			= new int[WINDOW_CHANNEL_COUNT];
+	int[] slidingWindow = new int[WINDOW_CHANNEL_COUNT];
 
 	// Index to the sliding window of the current estimated channel
-	int								currentSlidingIndex;
+	int currentSlidingIndex;
 
 	// The index to the last update of the sliding window
-	int								lastWindowUpdate;
+	int lastWindowUpdate;
 
-	RoundType						currentRound			= RoundType.bothRound;
+	RoundType currentRound = RoundType.bothRound;
 
 	enum RoundType {
 		shortRound, hopRound, bothRound;
@@ -75,43 +77,46 @@ public class MultiHop extends RendezvousAlgorithm {
 		MasterNetworkRadio, SeekingRendezvous, OperatingNetwork, Syncing;
 
 		// The count of how many hops have been made in the current sync attempt
-		private long				currentHop			= 0;
+		private long currentHop = 0;
 
 		// Number of successful hop attempts
-		private long				hitCount			= 0;
+		private long hitCount = 0;
 
 		// Number of required hops to be correct in order to synchronize
-		private static final long	REQUIRED_SYNC_HOPS	= 10;
+		private static final long REQUIRED_SYNC_HOPS = 10;
 
 		// Maximum number of hop attempts to synchronize before aborting
-		private static final long	MAX_SYNC_HOPS		= 20;
+		private static final long MAX_SYNC_HOPS = 20;
 
 	}
 
-	State						state;
-	public Channel[]			channels;
+	State state;
+	public Channel[] channels;
 
-	java.security.SecureRandom	secureRand;
-	int[]						bias;
+	java.security.SecureRandom secureRand;
+	int[] bias;
 
 	public MultiHop(String id, Channel[] channels, State startingState) {
 		super(id);
-		// If this is the first radio in the network, generate a shared seed for ALL radios
-		if (MultiHop.SEED == null) try {
-			MultiHop.SEED = java.security.SecureRandom.getInstanceStrong().generateSeed(
-					SEED_SIZE);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
+		// If this is the first radio in the network, generate a shared seed for
+		// ALL radios
+		if (MultiHop.SEED == null)
+			try {
+				MultiHop.SEED = java.security.SecureRandom.getInstanceStrong().generateSeed(SEED_SIZE);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
 
-		// Initialize radios with a cryptographically secure PRNG and shared SEED
+		// Initialize radios with a cryptographically secure PRNG and shared
+		// SEED
 		secureRand = new java.security.SecureRandom(MultiHop.SEED);
 
-		// Setup a random time offset that is plus or minus the MAX_TIME_OFFSET
-		// timeOffset = (Math.abs(new Random().nextLong()) % MAX_TIME_OFFSET);
-		// startTime = getCurrentMillis();
 		currentHopRound = Math.abs(new Random().nextInt()) % MAX_ROUND_OFFSET;
+		if (startingState == State.SeekingRendezvous) {
+			currentHopRound += MAX_ROUND_OFFSET;
+		}
 		currentSlidingIndex = currentHopRound;
+
 		log.info("Starting Hop/Sliding Index: " + currentHopRound);
 		// Build ranking table with Channels array
 		this.channels = channels;
@@ -130,7 +135,7 @@ public class MultiHop extends RendezvousAlgorithm {
 			}
 		}
 		// Pre-load the sliding window with valid channels
-		initializeSlidingWindow();
+		initializeSlidingWindow(startingState);
 
 		this.state = startingState;
 	}
@@ -143,7 +148,7 @@ public class MultiHop extends RendezvousAlgorithm {
 			if (currentShortRound % SEARCH_SPEED == 0) {
 				currentHopRound += 1;
 			}
-		} else /* SEARCH_SPEED < 1 */{
+		} else /* SEARCH_SPEED < 1 */ {
 			currentHopRound += 1;
 			if (currentHopRound % (1 / SEARCH_SPEED) == 0) {
 				currentShortRound += 1;
@@ -163,24 +168,26 @@ public class MultiHop extends RendezvousAlgorithm {
 		incrementRound();
 		updateSlidingWindow();
 		switch (state) {
-			case MasterNetworkRadio:
-			case OperatingNetwork:
-			case Syncing:
-				if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
-					currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
-				}
-				break;
-			case SeekingRendezvous:
-				if (currentRound == RoundType.bothRound || currentRound == RoundType.shortRound) {
-					currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
-				}
-				break;
-			default:
-				throw new RuntimeException("Undefined state: " + state);
+		case MasterNetworkRadio:
+		case OperatingNetwork:
+		case Syncing:
+			if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
+				currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
+				log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
+				log.info(id + " Sliding index = " + currentSlidingIndex);
+			}
+			break;
+		case SeekingRendezvous:
+			if (currentRound == RoundType.bothRound || currentRound == RoundType.shortRound) {
+				currentSlidingIndex = (currentSlidingIndex + 1) % (WINDOW_CHANNEL_COUNT - 1);
+				log.info(id + " Last window update: " + lastWindowUpdate);
+				log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
+				log.info(id + " Sliding index = " + currentSlidingIndex);
+			}
+			break;
+		default:
+			throw new RuntimeException("Undefined state: " + state);
 		}
-		log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
-		log.info(id + " Channels = " + Arrays.toString(channels));
-		log.info(id + " Sliding index = " + currentSlidingIndex);
 		return channels[slidingWindow[currentSlidingIndex]];
 	}
 
@@ -195,107 +202,118 @@ public class MultiHop extends RendezvousAlgorithm {
 		}
 	}
 
-	private void initializeSlidingWindow() {
-		for (int i = 0; i < WINDOW_CHANNEL_COUNT; ++i) {
+	private void initializeSlidingWindow(State startingState) {
+		int targetIndex;
+		switch (startingState) {
+		case MasterNetworkRadio:
+			targetIndex = currentHopRound;
+			break;
+		case OperatingNetwork:
+		case SeekingRendezvous:
+		case Syncing:
+		default:
+			targetIndex = WINDOW_CHANNEL_COUNT;
+		}
+		for (int i = 0; i < targetIndex; ++i) {
 			slidingWindow[i] = generateSecureRandomInt() % channels.length;
 		}
-		lastWindowUpdate = WINDOW_CHANNEL_COUNT;
+		lastWindowUpdate = targetIndex;
 	}
 
 	private void updateSlidingWindow() {
 		while (lastWindowUpdate <= currentHopRound) {
-			slidingWindow[lastWindowUpdate % WINDOW_CHANNEL_COUNT] = generateSecureRandomInt()
-					% channels.length;
+			slidingWindow[lastWindowUpdate % WINDOW_CHANNEL_COUNT] = generateSecureRandomInt() % channels.length;
 			lastWindowUpdate++;
 		}
 	}
 
 	@Override
 	public void receiveBroadcast(Channel currentChannel, String message) {
-		// Ignore any messages sent from this radio (every radio always hears its own broadcast)
-		if (message.startsWith(id)) return;
+		// Ignore any messages sent from this radio (every radio always hears
+		// its own broadcast)
+		if (message.startsWith(id))
+			return;
 
 		log.info("Message received: " + message);
 
 		switch (state) {
 
-			case MasterNetworkRadio:
-				break;
+		case MasterNetworkRadio:
+			break;
 
-			case OperatingNetwork:
-				break;
+		case OperatingNetwork:
+			break;
 
-			case SeekingRendezvous:
+		case SeekingRendezvous:
+			if (message.contains("0HELLO")) {
+				log.info("Radio " + id + " switching SYNCING state");
+				// currentHopRound = lastWindowUpdate;
+				state = State.Syncing;
+				state.currentHop = 0;
+				state.hitCount = 0;
+			}
+			break;
+
+		case Syncing:
+			if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
 				if (message.contains("0HELLO")) {
-					log.info("Radio " + id + " switching SYNCING state");
-					//currentHopRound = lastWindowUpdate;
-					state = State.Syncing;
-					state.currentHop = 0;
-					state.hitCount = 0;
+					log.info("Syncing success, up to " + state.hitCount);
+					state.hitCount += 1;
 				}
-				break;
-
-			case Syncing:
-				if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
-					if (message.contains("0HELLO")) {
-						log.info("Syncing success, up to " + state.hitCount);
-						state.hitCount += 1;
-					}
-					if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
-						log.info("Radio " + id + " switching DONE state");
-						state = State.OperatingNetwork;
-					}
+				if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
+					log.info("Radio " + id + " switching DONE state");
+					state = State.OperatingNetwork;
 				}
-				break;
+			}
+			break;
 
-			default:
-				throw new RuntimeException("Invalid state defined: " + state);
+		default:
+			throw new RuntimeException("Invalid state defined: " + state);
 		}
 	}
 
 	@Override
 	public void broadcastSync(Channel currentChannel) {
 		switch (state) {
-			case MasterNetworkRadio:
-				currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: "
-						+ currentChannel.toString());
-				break;
+		case MasterNetworkRadio:
+			currentChannel.broadcastMessage(id + " 0" + "HELLO on channel: " + currentChannel.toString());
+			break;
 
-			case OperatingNetwork:
-				break;
+		case OperatingNetwork:
+			break;
 
-			case SeekingRendezvous:
-				// Don't broadcast anything, just listen for messages from the master network
-				break;
+		case SeekingRendezvous:
+			// Don't broadcast anything, just listen for messages from the
+			// master network
+			break;
 
-			case Syncing:
-				if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
-					state.currentHop += 1;
-					if (state.currentHop > State.MAX_SYNC_HOPS) {
-						log.info("Radio " + id + " switching back to SEEKING state");
-						state = State.SeekingRendezvous;
-					}
+		case Syncing:
+			if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
+				state.currentHop += 1;
+				if (state.currentHop > State.MAX_SYNC_HOPS) {
+					log.info("Radio " + id + " switching back to SEEKING state");
+					state = State.SeekingRendezvous;
 				}
-				break;
+			}
+			break;
 
-			default:
-				throw new RuntimeException("Undefined state: " + state + " received in radio: "
-						+ id);
+		default:
+			throw new RuntimeException("Undefined state: " + state + " received in radio: " + id);
 		}
 	}
 
 	@Override
 	public boolean isSynced() {
 		switch (state) {
-			case MasterNetworkRadio:
-			case OperatingNetwork:
-				return true;
+		case MasterNetworkRadio:
+		case OperatingNetwork:
+			return true;
 
-			case SeekingRendezvous:
-			case Syncing:
-				return false;
-			default:
-				throw new RuntimeException("Undefined state: " + state);
+		case SeekingRendezvous:
+		case Syncing:
+			return false;
+		default:
+			throw new RuntimeException("Undefined state: " + state);
 		}
 	}
 

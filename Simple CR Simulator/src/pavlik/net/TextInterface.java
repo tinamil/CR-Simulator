@@ -18,7 +18,7 @@ public class TextInterface {
 
 	private static final String	channels		= null;
 //	private static final String	timing			= null;
-	private static final String	configDirectory	= "config/async/10/FreqHopConfig.xml";
+	private static final String	configDirectory	= "config/async/1000/FreqHopConfig.xml";
 
 	public static void main(String[] args) throws IOException {
 		log.fine("Begin Main");

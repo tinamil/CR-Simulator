@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<network algorithm="fh">
+	<radio name="Master" channels="1-2000" />
+	<radio name="Joiner" channels="1-2000" />
+</network>

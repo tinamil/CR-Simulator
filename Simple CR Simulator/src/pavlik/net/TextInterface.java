@@ -18,7 +18,7 @@ public class TextInterface {
 
 	private static final String	channels		= null;
 //	private static final String	timing			= null;
-	private static final String	configDirectory	= "config/async/1000/FreqHopConfig.xml";
+	private static final String	configDirectory	= "config/async/1000";
 
 	public static void main(String[] args) throws IOException {
 		log.fine("Begin Main");
@@ -30,7 +30,7 @@ public class TextInterface {
 	}
 
 	public static File[] loadConfigFiles(File directory) {
-		return loadConfigFiles(directory, ".xml");
+		return loadConfigFiles(directory, "FreqHopConfig.xml");
 	}
 	
 	public static File[] loadConfigFiles(File directory, String acceptString) {

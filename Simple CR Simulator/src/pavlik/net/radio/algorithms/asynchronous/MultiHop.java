@@ -37,18 +37,17 @@ public class MultiHop extends RendezvousAlgorithm {
 	private static final boolean USE_BIAS = false;
 
 	// The radios clock will be set to between the current time and the current
-	// time +
-	// MAX_ROUND_OFFSET
-	private static int MAX_ROUND_OFFSET = 400;
+	// time + MAX_ROUND_OFFSET
+	private static int MAX_ROUND_OFFSET = 50;
+	
 	// private long timeOffset;
 	// private long startTime;
 	private int currentHopRound;
 	private int currentShortRound = 0;
 
 	// Modifier applied to base HOP_RATE in order to search for the right
-	// network during the Seeking
-	// phase
-	public static double SEARCH_SPEED = 1;
+	// network during the Seeking phase
+	public static double SEARCH_SPEED = 2;
 
 	// Uncomment to override and slow down to 1 second hops for debug
 	// protected static long HOP_RATE = 1000;
@@ -122,8 +121,8 @@ public class MultiHop extends RendezvousAlgorithm {
 		this.channels = channels;
 		Arrays.sort(channels, new Comparator<Channel>() {
 			public int compare(Channel o1, Channel o2) {
-				return Double.compare(o1.noise, o2.noise);
-				// return o1.compareTo(o2);
+				//return Double.compare(o1.noise, o2.noise);
+				return o1.compareTo(o2);
 			};
 		});
 		int biasCount = (channels.length * (channels.length + 1)) / 2;

@@ -7,15 +7,18 @@ import java.io.IOException;
 
 public class RadioTransmissionGenerator {
 
-	private static final int SAMPLE_RATE = 10000;
+	private static final double SAMPLE_RATE = 1E6;
+	private static final int SYMBOL_RATE = 10000;
 	private static final int[] FREQUENCIES = { 500, 600, 700, 800, 900, 1000 };
 	private static final String NEWLINE = System.getProperty("line.separator");
 
 	public static void main(String[] args) {
 		StringBuilder output = new StringBuilder();
-		for (int freq : FREQUENCIES) {
-			for (int t = 0; t < SAMPLE_RATE; ++t) {
-				Double val = 2 * Math.PI * freq * t / 1E6;
+		int t = 0;
+		for (int f = 0; f < FREQUENCIES.length; ++f) {
+			int freq = FREQUENCIES[f];
+			for (; t < (f+1) * SYMBOL_RATE; ++t) {
+				Double val = 2 * Math.PI * freq * t / SAMPLE_RATE;
 				output.append(Math.cos(val));
 				output.append(",");
 				output.append(Math.sin(val));

@@ -5,11 +5,16 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Exploratory class designed to test generating tones for a real radio to transmit
+ * @author John
+ *
+ */
 public class RadioTransmissionGenerator {
 
 	private static final double SAMPLE_RATE = 1E6;
 	private static final int SYMBOL_RATE = 10000;
-	private static final int[] FREQUENCIES = { 500, 600, 700, 800, 900, 1000 };
+	private static final int[] FREQUENCIES = { 5000, 6000, 7000, 8000, 9000, 10000 };
 	private static final String NEWLINE = System.getProperty("line.separator");
 
 	public static void main(String[] args) {

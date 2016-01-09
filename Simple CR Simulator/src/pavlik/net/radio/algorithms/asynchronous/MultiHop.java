@@ -66,6 +66,10 @@ public class MultiHop extends RendezvousAlgorithm {
 	// The index to the last update of the sliding window
 	int lastWindowUpdate;
 
+	//RoundTypes are used to allow the joining radio hop at a different rate
+	//than the frequency hop rate of the network.  Due to the discrete and serial
+	//nature of this simulation they are necessary to track which types of radios
+	//are hopping on each iteration.
 	RoundType currentRound = RoundType.bothRound;
 
 	enum RoundType {

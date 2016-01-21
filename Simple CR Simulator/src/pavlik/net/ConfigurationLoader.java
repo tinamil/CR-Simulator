@@ -17,6 +17,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import pavlik.net.Channel.Channel;
+import pavlik.net.radio.AlgorithmFactory;
 import pavlik.net.radio.Radio;
 import pavlik.net.radio.RendezvousAlgorithm;
 
@@ -88,6 +89,7 @@ public class ConfigurationLoader {
 		Set<Radio> radioSet = new HashSet<>();
 		NodeList nodeList = doc.getElementsByTagName("radio");
 		boolean first = true;
+		AlgorithmFactory factory = new AlgorithmFactory();
 		for (int nodeIndex = 0; nodeIndex < nodeList.getLength(); nodeIndex++) {
 			Node node = nodeList.item(nodeIndex);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -96,7 +98,7 @@ public class ConfigurationLoader {
 				String channelString = eElement.getAttribute("channels");
 				if (channelOverride != null) channelString = channelOverride;
 				Channel[] channels = simulation.getSpectrum().buildChannels(channelString);
-				RendezvousAlgorithm algorithm = RendezvousAlgorithm.getAlgorithm(simulation
+				RendezvousAlgorithm algorithm = factory.getAlgorithm(simulation
 						.getRendezvousString(), name, channels, first);
 				first = false;
 				Radio radio = new Radio(name, algorithm);

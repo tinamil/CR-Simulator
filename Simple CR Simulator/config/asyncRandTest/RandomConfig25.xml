@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<network algorithm="drseq">
+	<radio name="Master" channels="1-1000" />
+	<radio name="Joiner" channels="1-250,1001-1750" />
+</network>

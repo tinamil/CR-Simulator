@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public class Spectrum {
@@ -20,7 +21,7 @@ public class Spectrum {
 	 */
 	public Channel[] buildChannels(String channelString) {
 		log.fine("Building channels");
-		Set<Channel> channelSet = new HashSet<>();
+		Set<Channel> channelSet = new TreeSet<>();
 		String[] channelCommaSplits = channelString.split(",");
 		for (String commaChannel : channelCommaSplits) {
 			String[] dashSplit = commaChannel.split("-");

@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 import pavlik.net.Channel.Spectrum;
 import pavlik.net.radio.Radio;
 
-public class Simulation extends Thread {
+public class Simulation {
 	private static final Logger	log					= Logger.getLogger(Simulation.class.getName());
 
 	// public int timingType;
@@ -23,7 +23,6 @@ public class Simulation extends Thread {
 		allRadios.addAll(radios);
 	}
 
-	@Override
 	public void run() {
 		log.info("Begin simulation");
 		long start = System.nanoTime();

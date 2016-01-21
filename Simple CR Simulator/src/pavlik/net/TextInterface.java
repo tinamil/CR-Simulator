@@ -13,12 +13,12 @@ import java.util.logging.Logger;
 import pavlik.net.Simulation.SimListener;
 
 public class TextInterface {
-	private static final Logger	log				= Logger.getLogger(TextInterface.class.getName());
-	private static int			totalRunCount	= 5000;
+	private static final Logger log = Logger.getLogger(TextInterface.class.getName());
+	private static final int totalRunCount = 1000;
 
-	private static final String	channels		= null;
-//	private static final String	timing			= null;
-	private static final String	configDirectory	= "config/async/1000";
+	private static final String channels = null;
+	// private static final String timing = null;
+	private static final String configDirectory = "config/asyncRandTest";
 
 	public static void main(String[] args) throws IOException {
 		log.fine("Begin Main");
@@ -30,9 +30,9 @@ public class TextInterface {
 	}
 
 	public static File[] loadConfigFiles(File directory) {
-		return loadConfigFiles(directory, "FreqHopConfig.xml");
+		return loadConfigFiles(directory, ".xml");
 	}
-	
+
 	public static File[] loadConfigFiles(File directory, String acceptString) {
 		if (!directory.isDirectory()) {
 			return new File[] { directory };
@@ -58,41 +58,40 @@ public class TextInterface {
 	}
 
 	private static void executeSim(File configFile, int runs) {
-		Simulation sim = ConfigurationLoader.loadConfiguration(configFile, channels);
-		sim.addListener(new TextInterface().new TextListener(sim, configFile, runs));
-		sim.start();
+		for (int i = 0; i < totalRunCount; ++i) {
+			Simulation sim = ConfigurationLoader.loadConfiguration(configFile, channels);
+			sim.addListener(new TextInterface().new TextListener(sim, configFile, runs));
+			sim.run();
+		}
 	}
 
 	private class TextListener implements SimListener {
-		Simulation	sim;
-		final int	runs;
-		final File	configFile;
+		Simulation sim;
+		//final int runs;
+		final File configFile;
 
 		public TextListener(Simulation sim, File configFile, int runs) {
 			this.sim = sim;
 			this.configFile = configFile;
-			this.runs = runs;
+			//this.runs = runs;
 		}
 
 		@Override
 		public void complete(long timeSpent) {
-			String filename = "output/" + configFile.getPath() + "/" + sim.getRendezvousString()
-					+ ".txt";
+			String filename = "output/" + configFile.getPath() + "/" + sim.getRendezvousString() + ".txt";
 			File check = new File(filename);
-			if (!check.exists()) try {
-				check.getParentFile().mkdirs();
-				check.createNewFile();
-			} catch (IOException e1) {
-				log.severe(e1.getMessage());
-				e1.printStackTrace();
-			}
+			if (!check.exists())
+				try {
+					check.getParentFile().mkdirs();
+					check.createNewFile();
+				} catch (IOException e1) {
+					log.severe(e1.getMessage());
+					e1.printStackTrace();
+				}
 			try (final BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
 				writer.write(Long.toString(sim.getRounds()));
 				writer.newLine();
 				writer.flush();
-				if (runs < totalRunCount) {
-					executeSim(configFile, runs + 1);
-				}
 			} catch (IOException e) {
 				log.severe(e.getMessage());
 				e.printStackTrace();

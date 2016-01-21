@@ -1,7 +1,7 @@
 package pavlik.net.radio.algorithms.asynchronous;
 
 import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
@@ -29,17 +29,13 @@ public class MultiHop extends RendezvousAlgorithm {
 
 	private static final Logger log = Logger.getLogger(MultiHop.class.getName());
 
-	// Seed will be generated the first time this class is instantiated
-	private static byte[] SEED = null;
-	private static final int SEED_SIZE = 512;
-
 	// Whether to use a 1/X or uniform probability distribution
 	private static final boolean USE_BIAS = false;
 
 	// The radios clock will be set to between the current time and the current
 	// time + MAX_ROUND_OFFSET
-	private static int MAX_ROUND_OFFSET = 50;
-	
+	private static final int MAX_ROUND_OFFSET = 500;
+
 	// private long timeOffset;
 	// private long startTime;
 	private int currentHopRound;
@@ -47,7 +43,7 @@ public class MultiHop extends RendezvousAlgorithm {
 
 	// Modifier applied to base HOP_RATE in order to search for the right
 	// network during the Seeking phase
-	public static double SEARCH_SPEED = 2;
+	public static final double SEARCH_SPEED = 2;
 
 	// Uncomment to override and slow down to 1 second hops for debug
 	// protected static long HOP_RATE = 1000;
@@ -55,7 +51,7 @@ public class MultiHop extends RendezvousAlgorithm {
 	// Number of channels in the sliding window
 	// private static int WINDOW_CHANNEL_COUNT = ((int) (MAX_TIME_OFFSET /
 	// HOP_RATE) + 1);
-	private static int WINDOW_CHANNEL_COUNT = (2 * MAX_ROUND_OFFSET) + 1;
+	private static final int WINDOW_CHANNEL_COUNT = (2 * MAX_ROUND_OFFSET) + 1;
 
 	// A sliding time window of indices into the channels[]
 	int[] slidingWindow = new int[WINDOW_CHANNEL_COUNT];
@@ -66,10 +62,12 @@ public class MultiHop extends RendezvousAlgorithm {
 	// The index to the last update of the sliding window
 	int lastWindowUpdate;
 
-	//RoundTypes are used to allow the joining radio hop at a different rate
-	//than the frequency hop rate of the network.  Due to the discrete and serial
-	//nature of this simulation they are necessary to track which types of radios
-	//are hopping on each iteration.
+	// RoundTypes are used to allow the joining radio hop at a different rate
+	// than the frequency hop rate of the network. Due to the discrete and
+	// serial
+	// nature of this simulation they are necessary to track which types of
+	// radios
+	// are hopping on each iteration.
 	RoundType currentRound = RoundType.bothRound;
 
 	enum RoundType {
@@ -96,23 +94,12 @@ public class MultiHop extends RendezvousAlgorithm {
 	State state;
 	public Channel[] channels;
 
-	java.security.SecureRandom secureRand;
+	SecureRandom secureRand;
 	int[] bias;
 
-	public MultiHop(String id, Channel[] channels, State startingState) {
+	public MultiHop(String id, Channel[] channels, State startingState, byte[] seed) {
 		super(id);
-		// If this is the first radio in the network, generate a shared seed for
-		// ALL radios
-		if (MultiHop.SEED == null)
-			try {
-				MultiHop.SEED = java.security.SecureRandom.getInstanceStrong().generateSeed(SEED_SIZE);
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			}
-
-		// Initialize radios with a cryptographically secure PRNG and shared
-		// SEED
-		secureRand = new java.security.SecureRandom(MultiHop.SEED);
+		secureRand = new SecureRandom(seed);
 
 		currentHopRound = Math.abs(new Random().nextInt()) % MAX_ROUND_OFFSET;
 		if (startingState == State.SeekingRendezvous) {
@@ -125,7 +112,7 @@ public class MultiHop extends RendezvousAlgorithm {
 		this.channels = channels;
 		Arrays.sort(channels, new Comparator<Channel>() {
 			public int compare(Channel o1, Channel o2) {
-				//return Double.compare(o1.noise, o2.noise);
+				// return Double.compare(o1.noise, o2.noise);
 				return o1.compareTo(o2);
 			};
 		});
@@ -143,6 +130,7 @@ public class MultiHop extends RendezvousAlgorithm {
 		this.state = startingState;
 	}
 
+	@SuppressWarnings("unused")
 	private void incrementRound() {
 		int previousShortRound = currentShortRound;
 		int previousHopRound = currentHopRound;
@@ -182,7 +170,8 @@ public class MultiHop extends RendezvousAlgorithm {
 			break;
 		case SeekingRendezvous:
 			if (currentRound == RoundType.bothRound || currentRound == RoundType.shortRound) {
-				currentSlidingIndex = (currentSlidingIndex + 1) % (WINDOW_CHANNEL_COUNT - 1);
+				// currentSlidingIndex = (currentSlidingIndex + 1) %
+				// (WINDOW_CHANNEL_COUNT - 1);
 				log.info(id + " Last window update: " + lastWindowUpdate);
 				log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
 				log.info(id + " Sliding index = " + currentSlidingIndex);

@@ -33,17 +33,12 @@ public class MultiHop extends RendezvousAlgorithm {
 	private static final boolean USE_BIAS = false;
 
 	// The radios clock will be set to between the current time and the current
-	// time + MAX_ROUND_OFFSET
-	private static final int MAX_ROUND_OFFSET = 500;
+	// time + MAX_ROUND_OFFSET * FREQHOP_RATE
+	private static final int MAX_ROUND_OFFSET = 50;
 
 	// private long timeOffset;
 	// private long startTime;
 	private int currentHopRound;
-	private int currentShortRound = 0;
-
-	// Modifier applied to base HOP_RATE in order to search for the right
-	// network during the Seeking phase
-	public static final double SEARCH_SPEED = 2;
 
 	// Uncomment to override and slow down to 1 second hops for debug
 	// protected static long HOP_RATE = 1000;
@@ -61,18 +56,6 @@ public class MultiHop extends RendezvousAlgorithm {
 
 	// The index to the last update of the sliding window
 	int lastWindowUpdate;
-
-	// RoundTypes are used to allow the joining radio hop at a different rate
-	// than the frequency hop rate of the network. Due to the discrete and
-	// serial
-	// nature of this simulation they are necessary to track which types of
-	// radios
-	// are hopping on each iteration.
-	RoundType currentRound = RoundType.bothRound;
-
-	enum RoundType {
-		shortRound, hopRound, bothRound;
-	}
 
 	public enum State {
 		MasterNetworkRadio, SeekingRendezvous, OperatingNetwork, Syncing;
@@ -130,28 +113,8 @@ public class MultiHop extends RendezvousAlgorithm {
 		this.state = startingState;
 	}
 
-	@SuppressWarnings("unused")
 	private void incrementRound() {
-		int previousShortRound = currentShortRound;
-		int previousHopRound = currentHopRound;
-		if (SEARCH_SPEED >= 1) {
-			currentShortRound += 1;
-			if (currentShortRound % SEARCH_SPEED == 0) {
-				currentHopRound += 1;
-			}
-		} else /* SEARCH_SPEED < 1 */ {
-			currentHopRound += 1;
-			if (currentHopRound % (1 / SEARCH_SPEED) == 0) {
-				currentShortRound += 1;
-			}
-		}
-		if (currentShortRound == previousShortRound) {
-			currentRound = RoundType.hopRound;
-		} else if (currentHopRound == previousHopRound) {
-			currentRound = RoundType.shortRound;
-		} else {
-			currentRound = RoundType.bothRound;
-		}
+		currentHopRound += 1;
 	}
 
 	@Override
@@ -162,20 +125,16 @@ public class MultiHop extends RendezvousAlgorithm {
 		case MasterNetworkRadio:
 		case OperatingNetwork:
 		case Syncing:
-			if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
-				currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
-				log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
-				log.info(id + " Sliding index = " + currentSlidingIndex);
-			}
+			currentSlidingIndex = (currentSlidingIndex + 1) % WINDOW_CHANNEL_COUNT;
+			log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
+			log.info(id + " Sliding index = " + currentSlidingIndex);
 			break;
 		case SeekingRendezvous:
-			if (currentRound == RoundType.bothRound || currentRound == RoundType.shortRound) {
-				// currentSlidingIndex = (currentSlidingIndex + 1) %
-				// (WINDOW_CHANNEL_COUNT - 1);
-				log.info(id + " Last window update: " + lastWindowUpdate);
-				log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
-				log.info(id + " Sliding index = " + currentSlidingIndex);
-			}
+			// currentSlidingIndex = (currentSlidingIndex + 1) %
+			// (WINDOW_CHANNEL_COUNT - 1);
+			log.info(id + " Last window update: " + lastWindowUpdate);
+			log.info(id + " Sliding Window: " + Arrays.toString(slidingWindow));
+			log.info(id + " Sliding index = " + currentSlidingIndex);
 			break;
 		default:
 			throw new RuntimeException("Undefined state: " + state);
@@ -247,15 +206,13 @@ public class MultiHop extends RendezvousAlgorithm {
 			break;
 
 		case Syncing:
-			if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
-				if (message.contains("0HELLO")) {
-					log.info("Syncing success, up to " + state.hitCount);
-					state.hitCount += 1;
-				}
-				if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
-					log.info("Radio " + id + " switching DONE state");
-					state = State.OperatingNetwork;
-				}
+			if (message.contains("0HELLO")) {
+				log.info("Syncing success, up to " + state.hitCount);
+				state.hitCount += 1;
+			}
+			if (state.hitCount >= State.REQUIRED_SYNC_HOPS) {
+				log.info("Radio " + id + " switching DONE state");
+				state = State.OperatingNetwork;
 			}
 			break;
 
@@ -280,12 +237,10 @@ public class MultiHop extends RendezvousAlgorithm {
 			break;
 
 		case Syncing:
-			if (currentRound == RoundType.bothRound || currentRound == RoundType.hopRound) {
-				state.currentHop += 1;
-				if (state.currentHop > State.MAX_SYNC_HOPS) {
-					log.info("Radio " + id + " switching back to SEEKING state");
-					state = State.SeekingRendezvous;
-				}
+			state.currentHop += 1;
+			if (state.currentHop > State.MAX_SYNC_HOPS) {
+				log.info("Radio " + id + " switching back to SEEKING state");
+				state = State.SeekingRendezvous;
 			}
 			break;
 

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<block>
+  <name>mode_ii</name>
+  <key>multihop_mode_ii</key>
+  <category>multihop</category>
+  <import>import multihop</import>
+  <make>multihop.mode_ii($size)</make>
+ 
+  <param>
+    <name>Size</name>
+    <key>size</key>
+    <value>samp_rate / fft_size</value>
+    <type>int</type>
+  </param>
+
+  <!-- Make one 'sink' node per input. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <sink>
+    <name>in</name>
+    <type>int</type>
+  </sink>
+
+  <!-- Make one 'source' node per output. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <source>
+    <name>out</name>
+    <type>int</type>
+  </source>
+</block>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<block>
+  <name>Convert Channel to Frequency</name>
+  <key>multihop_channel_to_freq</key>
+  <category>multihop</category>
+  <import>import multihop</import>
+  <make>multihop.channel_to_freq($fft_size, $sample_rate, $num_channels)</make>
+  
+  <param>
+    <name>FFT Size</name>
+    <key>fft_size</key>
+    <value>fft_size</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Sample Rate</name>
+    <key>sample_rate</key>
+    <value>samp_rate</value>
+    <type>real</type>
+  </param>
+  <param>
+    <name>Number of channels</name>
+    <key>num_channels</key>
+    <value>num_channels</value>
+    <type>int</type>
+  </param>
+
+  <sink>
+    <name>in</name>
+    <type>int</type>
+  </sink>
+
+  <source>
+    <name>out</name>
+    <type>int</type>
+  </source>
+</block>

@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<block>
+  <name>csprng</name>
+  <key>multihop_csprng</key>
+  <category>multihop</category>
+  <import>import multihop</import>
+  <make>multihop.csprng($seed, $freq_rate, $samp)</make>
+  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
+       Sub-nodes:
+       * name
+       * key (makes the value accessible as $keyname, e.g. in the make node)
+       * type -->
+  <param>
+    <name>Seed</name>
+    <key>seed</key>
+		<value>1</value>
+    <type>int</type>
+  </param>
+  
+  <param>
+    <name>Sample Rate</name>
+    <key>samp</key>
+		<value>samp_rate</value>
+    <type>real</type>
+  </param>
+  
+  <param>
+    <name>Freq Hop Rate</name>
+    <key>freq_rate</key>
+    <value>freqhop_rate</value>
+    <type>real</type>
+  </param>
+  
+    <!-- Make one 'source' node per output. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <source>
+    <name>out</name>
+    <type>int</type>
+  </source>
+</block>

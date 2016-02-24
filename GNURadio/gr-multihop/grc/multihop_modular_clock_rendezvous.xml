@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<block>
+  <name>modular_clock_rendezvous</name>
+  <key>multihop_modular_clock_rendezvous</key>
+  <category>multihop</category>
+  <import>import multihop</import>
+  <make>multihop.modular_clock_rendezvous($transmitter, $num_channels)</make>
+  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
+       Sub-nodes:
+       * name
+       * key (makes the value accessible as $keyname, e.g. in the make node)
+       * type -->
+  <param>
+    <name>Transmitter</name>
+    <key>transmitter</key>
+    <value>True</value>
+    <type>bool</type>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+  </param>
+  
+  <param>
+    <name>Number of channels</name>
+    <key>num_channels</key>
+    <value>num_channels</value>
+    <type>int</type>
+  </param>
+
+  <!-- Make one 'sink' node per input. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <sink>
+    <name>in</name>
+    <type>int</type>
+    <optional>1</optional>
+  </sink>
+
+  <!-- Make one 'source' node per output. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <source>
+    <name>out</name>
+    <type>int</type>
+    <optional>1</optional>
+  </source>
+</block>
